@@ -22,8 +22,6 @@ macroscript VrayToFBX
 		newMat.bumpMapAmount = 100
 		newMat.specularLevel = 25
 		
-		--Replace
-		
 		-- Replace VrayColor with Standard Diffuse Color
 		if (classof i.texmap_diffuse == VrayColor) then
 		(
