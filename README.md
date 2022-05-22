@@ -8,9 +8,20 @@ Script language:
 Maxscript.
 
 Function of the script:
-Take Vray materials and convert them to Standard Materials for exporting to FBX. These settings allow direct import into Blender and set up a PBR material with correct default settings.
+Take Vray Roughness materials and convert them to Standard (Legacy) materials for exporting to FBX. These settings allow direct import into Blender and set up a PBR material with correct default settings.
 
-Works for Vray Materials using Roughness/Metallic workflow, Vray2Sided Materials, Vray Materials in Multi-Sub materials.
+Converts:
+Diffuse texture, Diffuse Color, VrayColor in Diffuse
+Roughness texture
+Metal texture
+Opacity texture
+Normal texture
+Normal DirectX to OpenGL (3dsmax uses DirectX & Blender uses OpenGL, its done via naming convention - Optional)
+Sets the correct Specular level for Blender
+Sets Reflection to White
+Sets Dielectric or Metallic material for Blender (depending on if Metal texture is used)
+Sets Gamma settings for sRGB and Linear images
+Can convert VrayMtl, Vray2SidedMtl, Multi-Material. You can edit the functions in the script to add more material types if you use them
 
-Workflow designed for PBR Vray Materials - Textures converted are Diffuse, Roughness, Metallic, Normal, Opacity.
-
+FBX Export Settings:
+Enable Embed Media to include textures in the FBX file for automatic mapping in Blender.
