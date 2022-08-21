@@ -3,7 +3,7 @@
 jmdvella@gmail.com
 2022
 
-version 02 notes: 
+version 01.01 notes: 
 - Option to skip DirectX/OpenGL naming for Normal bitmaps.
 - Bump node now can take either a direct bitmap or bitmap within the VRayNormalMap node.
 */
