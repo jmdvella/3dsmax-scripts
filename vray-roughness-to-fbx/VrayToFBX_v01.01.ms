@@ -1,11 +1,12 @@
 /*
-3dsmax to Blender FBX Material Converter 
-jmdvella@gmail.com
-2022
-
-version 01.01 notes: 
-- Option to skip DirectX/OpenGL naming for Normal bitmaps.
-- Bump node now can take either a direct bitmap or bitmap within the VRayNormalMap node.
+Author: James Vella
+Website: http://www.jamesvella.net/
+Name-US: V-Ray Roughness to FBX
+Version: 1.0.1
+Software: 3D Studio Max 2021.3
+Engine: V-Ray 5.00.04
+Language: Maxscript
+Description-US: Convert Vray Roughness materials to Standard for export to FBX
 */
 
 macroscript VrayToFBX
