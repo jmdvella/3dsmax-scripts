@@ -55,6 +55,7 @@ macroscript VrayToFBX
 		(
 			newMat.reflectionMapEnable = on
 			newMat.reflectionMap = i.texmap_metalness
+			i.texmap_metalness.coordinates.mappingtype = 0
 		)
 		
 		-- Replace Opacity
