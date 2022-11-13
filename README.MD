@@ -14,7 +14,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 JV_VrayRoughnessToFBX.ms
 - Script name in 3dsmax -> Automate VrayToFBX
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
-- Importing the FBX to Blender automatically creates a PBR materials.
+- Importing the FBX to Blender automatically creates a PBR materials
 - Importing the FBX to Cinema4D, use these scripts for your render engine: https://github.com/jmdvella/cinema4d-scripts
 - Export FBX settings: Enable "Embed Media" to include textures in the FBX file
 - You can edit the functions in the script to add more material types if you use them
