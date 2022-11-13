@@ -19,17 +19,21 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Export FBX settings: Enable "Embed Media" to include textures in the FBX file
 - You can edit the functions in the script to add more material types if you use them
 #### Supports:
+##### Materials
+  - VrayMtl, Vray2SidedMtl, Multi-Material
+  - Gamma settings for sRGB and Linear images
+  - Dielectric or Metallic material for Blender/Cinema4D (if Metal texture is used)
+  - Specular level for Blender 0.5
+  - Reflection to White
+##### Textures
   - Diffuse, Diffuse Color & VrayColor in Diffuse
   - Roughness 
   - Metal 
   - Opacity 
   - Normal 
   - Normal DirectX -> OpenGL (Optional: swap textures by naming convention, example: Leather_Normal_DirectX.png -> Leather_Normal_OpenG.png)
-  - Set Specular level for Blender 0.5
-  - Set Reflection to White
-  - Set Dielectric or Metallic material for Blender/Cinema4D (if Metal texture is used)
-  - Set Gamma settings for sRGB and Linear images
-  - Can convert VrayMtl, Vray2SidedMtl, Multi-Material. 
+#### Scripting Note: 
+Change/Add your own material settings in Function: fn convert_to_stdmtl i =
 
 <br />
 
