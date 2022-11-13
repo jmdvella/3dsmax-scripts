@@ -33,7 +33,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
   - Change Normal DirectX texture with OpenGL by filename suffix example: Leather_Normal_DirectX.png -> Leather_Normal_OpenG.png
 #### Scripting Note: 
 Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
-Change your own Normal texture naming convention in JV_VrayRoughnessToFBX.ms: line 91
+Change your own Normal texture naming convention: line 91
 
 <br />
 
@@ -44,5 +44,5 @@ Change your own Normal texture naming convention in JV_VrayRoughnessToFBX.ms: li
 - Metal materials: Move Diffuse texture -> Reflection node, Diffuse color: black, Fresnel reflections: off 
 - Legacy tool - Convert V-Ray Roughness materials to V-Ray Glossiness -> Convert to CoronaLegacyMtl
 #### Scripting Note: 
-Change your own Roughness texture naming convention in JV_RoughToGloss.ms: line 28
+Change your own Roughness texture naming convention: line 28
 
