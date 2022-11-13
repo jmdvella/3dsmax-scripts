@@ -21,7 +21,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 ##### Materials
   - VrayMtl, Vray2SidedMtl, Multi-Material
   - Gamma settings for sRGB and Linear images
-  - Dielectric or Metallic material for Blender/Cinema4D (if Metal texture is used)
+  - Dielectric or Metal material for Blender/Cinema4D (if Metal texture used)
   - Specular level for Blender 0.5
   - Reflection to White
 ##### Textures
@@ -30,19 +30,19 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
   - Metal 
   - Opacity 
   - Normal 
-  - Normal DirectX -> OpenGL (Optional: swap textures by naming convention, example: Leather_Normal_DirectX.png -> Leather_Normal_OpenG.png)
+  - Change Normal DirectX texture with OpenGL by filename suffix example: Leather_Normal_DirectX.png -> Leather_Normal_OpenG.png
 #### Scripting Note: 
 Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
-Change/Add your own naming convention in JV_VrayRoughnessToFBX.ms: line 91
+Change your own Normal texture naming convention in JV_VrayRoughnessToFBX.ms: line 91
 
 <br />
 
 ### JV_RoughToGloss.ms
 - "Script name" in 3dsmax -> JV_RoughToGloss.ms
 - Convert V-Ray Roughness Materials to V-Ray Glossiness Materials
-- Swaps Roughness materials with Glossiness by file naming suffix, example: Leather_Roughness.png -> Leather_Glossiness.png
+- Change Roughness texture with Glossiness by filename suffix example: Leather_Roughness.png -> Leather_Glossiness.png
 - Metal materials: Move Diffuse texture -> Reflection node, Diffuse color: black, Fresnel reflections: off 
 - Legacy tool - Convert V-Ray Roughness materials to V-Ray Glossiness -> Convert to CoronaLegacyMtl
 #### Scripting Note: 
-Change/Add your own naming convention in JV_RoughToGloss.ms: line 28
+Change your own Roughness texture naming convention in JV_RoughToGloss.ms: line 28
 
