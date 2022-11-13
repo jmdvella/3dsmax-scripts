@@ -6,12 +6,13 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 # How to use
 - Download the .ms file
 - Drag/Drop the .ms file into the 3dsmax viewport
-- 3dsmax Main Menu -> Customize -> Customize User Interface -> Toolbars -> Category -> Vella > "Locate the name of the script"
+- 3dsmax Main Menu -> Customize -> Customize User Interface -> Toolbars -> Category -> Vella > "Script name"
 
 <br />
 
 # Script descriptions
 JV_VrayRoughnessToFBX.ms
+- Script name in 3dsmax -> Automate VrayToFBX
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
 - Importing the FBX to Blender automatically creates a PBR materials.
 - Importing the FBX to Cinema4D, use these scripts for your render engine: https://github.com/jmdvella/cinema4d-scripts
