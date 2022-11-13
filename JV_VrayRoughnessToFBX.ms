@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayRoughnessToFBX
-Version: 1.0.2
+Version: 1.0.3
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.00.04
 Language: Maxscript
