@@ -64,6 +64,12 @@ macroscript VrayToFBX
 			newMat.opacityMap = i.texmap_opacity
 		)
 		
+		-- Replace Glass
+		if i.Refraction != color 0 0 0 then
+		(
+			newMat.opacity = 50
+		)
+		
 		-- Replace Normal texture
 		if i.texmap_bump != undefined then
 		(
