@@ -17,7 +17,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Importing the FBX to Blender automatically creates a PBR materials (except for glass)
 - Importing the FBX to Cinema4D, use these scripts for your render engine: https://github.com/jmdvella/cinema4d-scripts
 - Export FBX settings: Enable "Embed Media" to include textures in the FBX file
-- You can edit the functions in the script to add more material types if you use them
 #### Supports:
 ##### Materials
   - VrayMtl, Vray2SidedMtl, Multi-Material
@@ -33,7 +32,8 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
   - Normal 
   - Normal DirectX -> OpenGL (Optional: swap textures by naming convention, example: Leather_Normal_DirectX.png -> Leather_Normal_OpenG.png)
 #### Scripting Note: 
-Change/Add your own material settings in Function: fn convert_to_stdmtl i =
+Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
+Change/Add your own naming convention in JV_VrayRoughnessToFBX.ms: line 91
 
 <br />
 
@@ -41,8 +41,8 @@ Change/Add your own material settings in Function: fn convert_to_stdmtl i =
 - "Script name" in 3dsmax -> JV_RoughToGloss.ms
 - Convert V-Ray Roughness Materials to V-Ray Glossiness Materials
 - Swaps Roughness materials with Glossiness by file naming suffix, example: Leather_Roughness.png -> Leather_Glossiness.png
-- Metal materials: Move Diffuse texture -> Reflection node, Diffuse color:black, Fresnel reflections:off 
+- Metal materials: Move Diffuse texture -> Reflection node, Diffuse color: black, Fresnel reflections: off 
 - Legacy tool - Convert V-Ray Roughness materials to V-Ray Glossiness -> Convert to CoronaLegacyMtl
-
-
+#### Scripting Note: 
+Change/Add your own naming convention in JV_RoughToGloss.ms: line 28
 
