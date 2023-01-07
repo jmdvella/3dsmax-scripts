@@ -42,20 +42,27 @@ macroscript VrayToFBX
 			newMat.diffusemap = i.texmap_diffuse
 		)
 		
-		-- Remove Diffuse Falloff node (Optional) 	<--------------
-		while (classof i.texmap_diffuse == falloff) do
+		-- Remove Diffuse Falloff node and Color Correction node (Optional) 	<--------------
+		while (classof i.texmap_diffuse == falloff or classof i.texmap_diffuse == Color_Correction) do
 		(
-			newMat.diffusemap = i.texmap_diffuse.map1
-			i.texmap_diffuse = i.texmap_diffuse.map1  -- update the value of i.texmap_diffuse
-			if (classof i.texmap_diffuse != falloff) then break
-		)
-		
-		-- Remove Diffuse Color Correction node (Optional) 	<--------------
-		while (classof i.texmap_diffuse == Color_Correction) do
-		(
-			newMat.diffusemap = i.texmap_diffuse.map
-			i.texmap_diffuse = i.texmap_diffuse.map  -- update the value of i.texmap_diffuse
-			if (classof i.texmap_diffuse != Color_Correction) then break
+			try
+			(
+				newMat.diffusemap = i.texmap_diffuse.map1
+				-- Update the value of i.texmap_diffuse
+				i.texmap_diffuse = i.texmap_diffuse.map1
+				-- This will always select the node Front in Fresnel  
+				if (classof i.texmap_diffuse != falloff) then break
+			)
+			catch()
+			try
+			(
+				newMat.diffusemap = i.texmap_diffuse.map
+				-- Update the value of i.texmap_diffuse
+				i.texmap_diffuse = i.texmap_diffuse.map 
+				-- This will always take the node inside the Basic Parameters in Color Correction node
+				if (classof i.texmap_diffuse != Color_Correction) then break
+			)
+			catch()
 		)
 		
 		-- Replace Roughness texture
@@ -148,7 +155,7 @@ macroscript VrayToFBX
 		
 	-- end the undo block
 	undo off
-
+		
 	-- refresh asset tracker
 	ATSOps.Refresh()
 )
