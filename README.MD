@@ -19,7 +19,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Export FBX settings: Enable "Embed Media" to include textures in the FBX file
 #### Supports:
 ##### Materials
-  - VrayMtl, Vray2SidedMtl, Multi-Material
+  - VrayMtl, Vray2SidedMtl, Multi/Sub-Object
   - Gamma settings for sRGB and Linear images
   - Dielectric or Metal material for Blender/Cinema4D (if Metal texture used)
   - Specular level for Blender 0.5
@@ -29,11 +29,11 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
   - Roughness 
   - Metal 
   - Opacity 
-  - Normal 
-  - Change Normal DirectX texture with OpenGL by filename suffix example: Leather_Normal_DirectX.png -> Leather_Normal_OpenG.png
+  - Normal Bump
 #### Scripting Note: 
-Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
-Change your own Normal texture naming convention: line 91
+- Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
+- Change your own Normal texture naming convention by replacing the suffix "DirectX" and "OpenGL": i.texmap_bump.normal_map.filename = substituteString i.texmap_bump.normal_map.filename "DirectX" "OpenGL"
+- Change/Add your own Vray Classes below comment: -- Add VrayMtl Classes below for conversion
 
 <br />
 
