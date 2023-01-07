@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayRoughnessToFBX
-Version: 1.0.4
+Version: 1.1.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.00.04
 Language: Maxscript
@@ -17,6 +17,9 @@ macroscript VrayToFBX
 	Icon:#("SchematicView",2)
 
 (
+	-- start an undo block
+	undo on
+
 	-- Function to replace VrayMtl with StandardMtl and setup PBR settings for FBX/Blender
 	fn convert_to_stdmtl i =
 	(
@@ -37,6 +40,22 @@ macroscript VrayToFBX
 		(
 			if i.texmap_diffuse != undefined then
 			newMat.diffusemap = i.texmap_diffuse
+		)
+		
+		-- Remove Diffuse Falloff node (Optional) 	<--------------
+		while (classof i.texmap_diffuse == falloff) do
+		(
+			newMat.diffusemap = i.texmap_diffuse.map1
+			i.texmap_diffuse = i.texmap_diffuse.map1  -- update the value of i.texmap_diffuse
+			if (classof i.texmap_diffuse != falloff) then break
+		)
+		
+		-- Remove Diffuse Color Correction node (Optional) 	<--------------
+		while (classof i.texmap_diffuse == Color_Correction) do
+		(
+			newMat.diffusemap = i.texmap_diffuse.map
+			i.texmap_diffuse = i.texmap_diffuse.map  -- update the value of i.texmap_diffuse
+			if (classof i.texmap_diffuse != Color_Correction) then break
 		)
 		
 		-- Replace Roughness texture
@@ -103,69 +122,33 @@ macroscript VrayToFBX
 		-- Convert VrayMtl to StandardMtl
 		i = newMat
 	)
-	
-	-- Function to replace VRay2SidedMtl with Front Material
-	fn convert_Vray2Sided_to_VrayMtl i = 
-	(
-		newMat = i.frontMtl 
 		
-		-- Convert VRay2SidedMtl to VrayMtl
-		i = newMat
-		
-		-- Convert from VrayMtl to StandardMtl using convert_to_stdmtl function
-		convert_to_stdmtl i
-	)
-	
+	-- Add VrayMtl Classes below for conversion
 
-	-- Run functions above for all scene materials in use
-	for i in sceneMaterials do
-	(
-		-- Convert VrayMtl to StandardMtl using convert_to_stdmtl function
-		if (classof i == VrayMtl) do 
+	-- Convert VRay2SidedMtl to VrayMtl
+	vrayMtlList = getClassInstances VRay2SidedMtl
+	for i in vrayMtlList do
+		(
+			-- Replace VRay2SidedMtl with Front material
+			newMat = i.frontMtl 
+			p = newMat
+			replaceinstances i p
+		)
+
+	-- Convert VrayMtl to Standard material (This should always be last after converting other VrayMtl classes to VrayMtl)
+	vrayMtlList = getClassInstances VRayMtl
+	for i in vrayMtlList do
 		(
 			p = convert_to_stdmtl i
-			
 			if (i.name == p.name) and (i.name != undefined) do
 			(
 				replaceinstances i p
 			)
-			
 		)
 		
-		-- Convert VRay2SidedMtl to StandardMtl using convert_Vray2Sided_to_VrayMtl function
-		if (classof i == VRay2SidedMtl) do
-		(
-			p = convert_Vray2Sided_to_VrayMtl i
-			replaceinstances i p
-		)
-		
-		-- Find Multi-Sub materials
-		if (classof i == Multimaterial) do 
-		(
-			-- For all children in Multi-Sub material
-			for n in i do
-			(
-				-- Convert VrayMtl to StandardMtl using convert_to_stdmtl function
-				if (classof n == VrayMtl) do 
-				(
-					p = convert_to_stdmtl n
-					
-					if (n.name == p.name) and (n.name != undefined) do
-					(
-						replaceInstances n p
-					)
-				)
-				
-				-- Convert VRay2SidedMtl to StandardMtl using convert_Vray2Sided_to_VrayMtl function
-				if (classof n == VRay2SidedMtl) do 
-				(
-					p = convert_Vray2Sided_to_VrayMtl n
-					replaceInstances n p
-				)
-			) 
-		)
-	)
-			
+	-- end the undo block
+	undo off
+
 	-- refresh asset tracker
 	ATSOps.Refresh()
 )
