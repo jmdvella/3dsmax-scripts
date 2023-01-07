@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayRoughnessToFBX
-Version: 1.0.3
+Version: 1.0.4
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.00.04
 Language: Maxscript
@@ -17,7 +17,7 @@ macroscript VrayToFBX
 	Icon:#("SchematicView",2)
 
 (
-	-- Function to replace Vray with Standard and setup PBR settings for FBX/Blender
+	-- Function to replace VrayMtl with StandardMtl and setup PBR settings for FBX/Blender
 	fn convert_to_stdmtl i =
 	(
 		-- Standard Settings for PBR export
@@ -58,6 +58,13 @@ macroscript VrayToFBX
 			i.texmap_metalness.coordinates.mappingtype = 0 
 		)
 		
+		-- Convert Metal numeric value to Reflection value
+		if i.reflection_metalness != 0 then
+		(
+			newMat.reflectionMapEnable = on
+			newMat.reflectionMapAmount = (i.reflection_metalness * 100)
+		)
+		
 		-- Replace Opacity
 		if i.texmap_opacity != undefined then
 		(
@@ -93,38 +100,24 @@ macroscript VrayToFBX
 		)
 		catch()
 		
-		-- Convert Vray to Standard Mtl
+		-- Convert VrayMtl to StandardMtl
 		i = newMat
-
 	)
 	
-	-- Function to replace VRay2SidedMtl with VrayMtl
+	-- Function to replace VRay2SidedMtl with Front Material
 	fn convert_Vray2Sided_to_VrayMtl i = 
 	(
 		newMat = i.frontMtl 
 		
-		-- Convert Vray to VrayMtl
+		-- Convert VRay2SidedMtl to VrayMtl
 		i = newMat
 		
-		-- Convert from VrayMtl to StandardMtl using convert_to_stdmtl Function
+		-- Convert from VrayMtl to StandardMtl using convert_to_stdmtl function
 		convert_to_stdmtl i
 	)
 	
-	-- Find all VRay2SidedMtl and replace with VrayMtl in the scene
-	for i in sceneMaterials do
-	(
-		if (classof i == VRay2SidedMtl) do
-		(
-			p = convert_Vray2Sided_to_VrayMtl i
-			
-			if (i.name == p.name) and (i.name != undefined) do
-			(
-				replaceinstances i p
-			)
-		)
-	)		
-	
-	-- Find all VrayMtls and VrayMtls in Multi-Sub in the scene
+
+	-- Run functions above for all scene materials in use
 	for i in sceneMaterials do
 	(
 		-- Convert VrayMtl to StandardMtl using convert_to_stdmtl function
@@ -139,12 +132,20 @@ macroscript VrayToFBX
 			
 		)
 		
-		-- Find Multi-Sub Materials
+		-- Convert VRay2SidedMtl to StandardMtl using convert_Vray2Sided_to_VrayMtl function
+		if (classof i == VRay2SidedMtl) do
+		(
+			p = convert_Vray2Sided_to_VrayMtl i
+			replaceinstances i p
+		)
+		
+		-- Find Multi-Sub materials
 		if (classof i == Multimaterial) do 
 		(
-			-- Convert VrayMtl to StandardMtl using convert_to_stdmtl function
+			-- For all children in Multi-Sub material
 			for n in i do
 			(
+				-- Convert VrayMtl to StandardMtl using convert_to_stdmtl function
 				if (classof n == VrayMtl) do 
 				(
 					p = convert_to_stdmtl n
@@ -153,8 +154,14 @@ macroscript VrayToFBX
 					(
 						replaceInstances n p
 					)
-					
-				)	
+				)
+				
+				-- Convert VRay2SidedMtl to StandardMtl using convert_Vray2Sided_to_VrayMtl function
+				if (classof n == VRay2SidedMtl) do 
+				(
+					p = convert_Vray2Sided_to_VrayMtl n
+					replaceInstances n p
+				)
 			) 
 		)
 	)
