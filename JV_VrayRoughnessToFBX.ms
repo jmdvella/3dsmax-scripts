@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayRoughnessToFBX
-Version: 1.1.0
+Version: 1.1.1
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.00.04
 Language: Maxscript
@@ -126,6 +126,19 @@ macroscript VrayToFBX
 		)
 		catch()
 		
+		-- Self Illumination
+		if i.selfIllumination != color 0 0 0 then
+		(
+			newMat.useSelfIllumColor = on
+			newMat.selfIllumColor = i.selfIllumination
+		)
+		if i.texmap_self_illumination != undefined then
+		(
+			newMat.useSelfIllumColor = on
+			newMat.selfIllumColor = color 255 255 255
+			newMat.selfillumMap = i.texmap_self_illumination
+		)
+		
 		-- Convert VrayMtl to StandardMtl
 		i = newMat
 	)
@@ -139,6 +152,25 @@ macroscript VrayToFBX
 			-- Replace VRay2SidedMtl with Front material
 			newMat = i.frontMtl 
 			p = newMat
+			replaceinstances i p
+		)
+		
+	-- Convert VRayLightMtl to VrayMtl
+	vrayMtlList = getClassInstances VRayLightMtl
+	for i in vrayMtlList do
+		(
+			-- Copy Light color to Self Illumination in VrayMtl
+			lightColor = i.color
+			p = VRayMtl()
+			p.name = i.name
+			p.selfIllumination = i.color
+			
+			-- Copy Light Color texture
+			if i.texmap != undefined then
+			(
+				p.texmap_self_illumination = i.texmap
+			)
+			
 			replaceinstances i p
 		)
 
