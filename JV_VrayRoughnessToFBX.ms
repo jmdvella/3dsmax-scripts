@@ -150,8 +150,7 @@ macroscript VrayToFBX
 	for i in vrayMtlList do
 		(
 			-- Replace VRay2SidedMtl with Front material
-			newMat = i.frontMtl 
-			p = newMat
+			p = i.frontMtl 
 			replaceinstances i p
 		)
 		
@@ -160,7 +159,6 @@ macroscript VrayToFBX
 	for i in vrayMtlList do
 		(
 			-- Copy Light color to Self Illumination in VrayMtl
-			lightColor = i.color
 			p = VRayMtl()
 			p.name = i.name
 			p.selfIllumination = i.color
