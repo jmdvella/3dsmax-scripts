@@ -35,7 +35,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
 - Change your own Normal texture naming convention by replacing the suffix "DirectX" and "OpenGL": i.texmap_bump.normal_map.filename = substituteString i.texmap_bump.normal_map.filename "DirectX" "OpenGL"
 - Change/Add your own Vray Classes below comment: -- Add VrayMtl Classes below for conversion
-- Removes Falloff & Color Correction nodes, if you want to keep this remove block "-- Remove Diffuse Falloff node and Color Correction node (Optional)"
+- Removes Falloff & Color Correction nodes, if you want to keep this remove block: -- Remove Diffuse Falloff node and Color Correction node (Optional)
 
 <br />
 
