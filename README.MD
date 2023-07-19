@@ -11,9 +11,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 <br />
 
 # Script descriptions
-
-<br />
-
 ### JV_CoronaToPhysical.ms
 - "Script name" in 3dsmax -> Automate CoronaToPhysical
 - Convert Corona Physical to Autodesk Physical materials
