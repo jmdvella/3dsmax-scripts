@@ -10,6 +10,10 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+# Script descriptions
+
+<br />
+
 ### JV_CoronaToPhysical.ms
 - "Script name" in 3dsmax -> Automate CoronaToPhysical
 - Convert Corona Physical to Autodesk Physical materials
@@ -65,7 +69,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
-# Script descriptions
 ### JV_VrayRoughnessToFBX.ms
 - "Script name" in 3dsmax -> Automate VrayToFBX
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
