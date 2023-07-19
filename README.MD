@@ -49,20 +49,23 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Gamma 2.2 for Diffuse, Gamma 1.0 for all other textures
 - If Metal texture used then Corona Physical Material switches Metalness to 'Metal'
 - Note about Glossiness: Due to the nature of Autodesk Physical Material using both Roughness & Glossiness instead of just Roughness or Glossiness in Physical Corona Materials it will switch to either Roughness or Glossiness based on your Reflection selection. Since this has an effect on Sheen and Clearcoat your textures and values will be inverted to suit whichever workflow you have selected in the Autodesk Physical Material
+- Converts to Bitmap not CoronaBitmap - if you want to convert to CoronaBitmap you can use the Official Corona Converter after running this script.
 #### Supports:
 ##### Materials
 - Autodesk Physical
 ##### Textures
-- Diffuse (if it cant find Diffuse texture it will use the Swatch Color)
+- Diffuse 
 - Glossiness and Roughness
 - Opacity
 - Metal
-- Normal
+- Normal / Bump
 - Displacement
 - IOR
-- Anisotropy
+- Anisotropy Amount / Rotation
 - Emission / Self Illumination
 - Clearcoat Amount / Roughness / Bump / IOR (but not Absorption as this behaves differently in Corona)
+- Numerical values such as Base Color Amount, Roughness Amount, IOR value etc.
+- Color swatches such as Base Color, Self-Illumination etc.
 
 <br />
 
