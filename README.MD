@@ -10,6 +10,36 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CoronaToPhysical.ms
+- "Script name" in 3dsmax -> Automate CoronaToPhysical
+- Convert Corona Physical to Autodesk Physical materials
+#### Notes:
+- Applies conversion scene wide, not on selected objects.
+#### Supports:
+##### Materials
+- Corona Physical
+##### Textures
+- Base Color
+- Roughness or Glossiness
+- Anisotropy Amount / Rotation (hopefully, might need further testing as I have my doubts)
+- IOR
+- Metal
+- Refraction (could be incorrect, still trying to work out how this works in Autodesk Physical)
+- Thin Shell
+- Opacity
+- Emission / Self-Illumination
+- Normal / Bump
+- Normal_Bump, when 'add gamma' is used and texture is loaded as 2.2, automatically applies gamma 1.0 to Physical Normal_Bump texture.
+- Displacement
+- Clearcoat Amount / Roughness / Bump
+- Numerical values such as Base Color Amount, Roughness Amount, IOR value etc.
+- Color swatches such as Base Color, Self-Illumination etc.
+- Corona Bitmap to Standard Bitmap conversion
+- All bitmap settings copied from Corona Bitmap (excluding the Output Curves)
+- Keeps all nodes in the hierarchy eg. Diffuse > Falloff > Basecolor.png or Composite nodes etc. Doesnt really matter how deep the hierarchy goes it just searches for the Bitmaps/CoronaBitmaps.
+
+<br />
+
 # Script descriptions
 ### JV_VrayRoughnessToFBX.ms
 - "Script name" in 3dsmax -> Automate VrayToFBX
