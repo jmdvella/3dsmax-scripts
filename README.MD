@@ -10,6 +10,31 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_PhysicalToCorona.ms
+- "Script name" in 3dsmax -> Automate PhysicalToCorona
+- Convert Autodesk Physical to Corona Physical materials
+- If Metal texture used then Corona Physical Material switches Metalness to 'Metal'. 
+#### Notes:
+- Applies conversion scene wide, not on selected objects.
+- Gamma 2.2 for Diffuse, Gamma 1.0 for all other textures
+- Note about Glossiness: Due to the nature of Autodesk Physical Material using both Roughness & Glossiness instead of just Roughness or Glossiness in Physical Corona Materials it will switch to either Roughness or Glossiness based on your Reflection selection. Since this has an effect on Sheen and Clearcoat your textures and values will be inverted to suit whichever workflow you have selected in the Autodesk Physical Material.
+#### Supports:
+##### Materials
+- Autodesk Physical
+##### Textures
+- Diffuse (if it cant find Diffuse texture it will use the Swatch Color)
+- Glossiness and Roughness
+- Opacity
+- Metal
+- Normal
+- Displacement
+- IOR
+- Anisotropy
+- Emission / Self Illumination
+- Clearcoat Amount / Roughness / Bump / IOR but not Absorption as this behaves differently in Corona.
+
+<br />
+
 ### JV_CoronaToPhysical.ms
 - "Script name" in 3dsmax -> Automate CoronaToPhysical
 - Convert Corona Physical to Autodesk Physical materials
@@ -31,7 +56,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Normal / Bump
 - Normal_Bump, when 'add gamma' is used and texture is loaded as 2.2, automatically applies gamma 1.0 to Physical Normal_Bump texture.
 - Displacement
-- Clearcoat Amount / Roughness / Bump
+- Clearcoat Amount / Roughness / Bump / IOR
 - Numerical values such as Base Color Amount, Roughness Amount, IOR value etc.
 - Color swatches such as Base Color, Self-Illumination etc.
 - Corona Bitmap to Standard Bitmap conversion
