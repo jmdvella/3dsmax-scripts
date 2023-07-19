@@ -10,31 +10,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
-### JV_PhysicalToCorona.ms
-- "Script name" in 3dsmax -> Automate PhysicalToCorona
-- Convert Autodesk Physical to Corona Physical materials
-- If Metal texture used then Corona Physical Material switches Metalness to 'Metal'. 
-#### Notes:
-- Applies conversion scene wide, not on selected objects.
-- Gamma 2.2 for Diffuse, Gamma 1.0 for all other textures
-- Note about Glossiness: Due to the nature of Autodesk Physical Material using both Roughness & Glossiness instead of just Roughness or Glossiness in Physical Corona Materials it will switch to either Roughness or Glossiness based on your Reflection selection. Since this has an effect on Sheen and Clearcoat your textures and values will be inverted to suit whichever workflow you have selected in the Autodesk Physical Material.
-#### Supports:
-##### Materials
-- Autodesk Physical
-##### Textures
-- Diffuse (if it cant find Diffuse texture it will use the Swatch Color)
-- Glossiness and Roughness
-- Opacity
-- Metal
-- Normal
-- Displacement
-- IOR
-- Anisotropy
-- Emission / Self Illumination
-- Clearcoat Amount / Roughness / Bump / IOR but not Absorption as this behaves differently in Corona.
-
-<br />
-
 ### JV_CoronaToPhysical.ms
 - "Script name" in 3dsmax -> Automate CoronaToPhysical
 - Convert Corona Physical to Autodesk Physical materials
@@ -62,6 +37,31 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Corona Bitmap to Standard Bitmap conversion
 - All bitmap settings copied from Corona Bitmap (excluding the Output Curves)
 - Keeps all nodes in the hierarchy eg. Diffuse > Falloff > Basecolor.png or Composite nodes etc. Doesnt really matter how deep the hierarchy goes it just searches for the Bitmaps/CoronaBitmaps.
+
+<br />
+
+### JV_PhysicalToCorona.ms
+- "Script name" in 3dsmax -> Automate PhysicalToCorona
+- Convert Autodesk Physical to Corona Physical materials
+- If Metal texture used then Corona Physical Material switches Metalness to 'Metal'. 
+#### Notes:
+- Applies conversion scene wide, not on selected objects.
+- Gamma 2.2 for Diffuse, Gamma 1.0 for all other textures
+- Note about Glossiness: Due to the nature of Autodesk Physical Material using both Roughness & Glossiness instead of just Roughness or Glossiness in Physical Corona Materials it will switch to either Roughness or Glossiness based on your Reflection selection. Since this has an effect on Sheen and Clearcoat your textures and values will be inverted to suit whichever workflow you have selected in the Autodesk Physical Material.
+#### Supports:
+##### Materials
+- Autodesk Physical
+##### Textures
+- Diffuse (if it cant find Diffuse texture it will use the Swatch Color)
+- Glossiness and Roughness
+- Opacity
+- Metal
+- Normal
+- Displacement
+- IOR
+- Anisotropy
+- Emission / Self Illumination
+- Clearcoat Amount / Roughness / Bump / IOR but not Absorption as this behaves differently in Corona.
 
 <br />
 
