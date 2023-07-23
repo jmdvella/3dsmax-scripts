@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net
 Name-US: JV_CoronaToPhysical
-Version: 1.5
+Version: 1.7
 Software: 3D Studio Max 2021.3
 Engine: Corona 7.0
 Language: Maxscript
@@ -21,36 +21,62 @@ macroscript CoronaToPhysical
 	
 	with animate off 
 	(
-		-- Function to recursively apply Gamma 1.0 to Bitmap
-		fn applyGammaCorrection i =
-		(
-			-- Check if the input is a bitmap
-			if isKindOf i BitmapTexture do
-			(
-				-- Apply Gamma 1.0 to the bitmap
-				i.bitmap = openBitmap i.bitmap.filename gamma:1.0
-			)
-
-			-- Check if the input has sub-properties
-			if i.numsubs > 0 do
-			(
-				-- Traverse the sub-properties
-				for j = 1 to i.numsubs do
-				(
-					-- Recursively apply gamma correction to sub-properties
-					applyGammaCorrection i[j]
-				)
-			)
-
-			-- Return the input unchanged
-			i
-		)
-		
+		-- Function to replace CoronaBitmap with Standard Bitmap
 		fn convertCoronaBitmapToStandard =
 		(
+			-- Check through CoronaNormal nodes to see if the 'Add gamma to input' checkbox is enabled
+			for i in getClassInstances CoronaNormal do
+			(
+				-- If the Bump / Normal Bump is using a Bitmap
+				if (i.normalMap != undefined) then
+				(
+					-- If CoronaNormal using 'Add gamma to input' checkbox
+					if (i.addGamma == on) then
+					(
+						-- if CoronaNormal is using CoronaBitmap
+						if classof i.normalMap == CoronaBitmap then
+						(
+							-- filenameFromPath copies only "myImage.jpg" instead of full path so (works for stripped paths)
+							p = openBitmap (filenameFromPath i.normalMap.filename) gamma:1.0
+							
+							-- Copy CoronaBitmap filename
+							p.filename = i.normalMap.filename
+							
+							-- Assign CoronaBitmap gamma 1.0 
+							p.gamma = 1.0
+						)
+						
+						-- if CoronaNormal is using Standard Bitmap
+						if classof i.normalMap == BitmapTexture then
+						(
+							-- filenameFromPath copies only "myImage.jpg" instead of full path so (works for stripped paths)
+							n = openBitmap (filenameFromPath i.normalMap.filename) gamma:1.0
+							
+							-- copy Bitmap filename
+							n.filename = i.normalMap.filename
+							
+							-- Assign Bitmap gamma 1.0
+							n.gamma = 1.0
+							
+							-- Replace the Normal Map Bitmap with the updated gamma 1.0 (reload Bitmap)
+							i.normalMap.bitmap = n 
+						)
+					)
+				)
+			)
+			
+			-- Replace CoronaBitmap with Standard Bitmap
 			for i in getClassInstances CoronaBitmap do
 			(
+				-- New variable for Standard Bitmap
 				local newBitmap = BitmapTexture()
+				
+				-- Check if Bitmap gamma is set to 1.0
+				if i.gamma == 1.0 then
+				(
+					-- Open the bitmap file with the specified gamma value
+					newBitmap.bitmap = openBitmap i.filename gamma:i.gamma
+				)
 
 				-- Assign the filename of the CoronaBitmap to the new BitmapTexture
 				newBitmap.filename = i.filename
@@ -81,13 +107,6 @@ macroscript CoronaToPhysical
 				newBitmap.output.rgb_offset = i.output.rgb_offset
 				newBitmap.output.rgb_level = i.output.rgb_level
 				newBitmap.output.bump_amount = i.output.bump_amount
-				
-				-- Check if gamma is set to "Automatic"
-				if i.gamma == 1.0 then
-				(
-					-- Open the bitmap file with the specified gamma value
-					newBitmap.bitmap = openBitmap i.filename gamma:i.gamma
-				)
 
 				-- Replace the CoronaBitmap with the new BitmapTexture
 				replaceInstances i newBitmap
@@ -199,13 +218,6 @@ macroscript CoronaToPhysical
 							
 							-- Copy Strength Multiplier
 							newMat.bump_map.bump_spin = oldMat.baseBumpTexmap.additionalBumpStrength
-						)
-						
-						-- If CoronaNormal using 'Add gamma to input' checkbox
-						if (oldMat.baseBumpTexmap.addGamma == on) then
-						(
-							-- Apply Gamma 1.0 from applyGammaCorrection function
-							applyGammaCorrection newMat.bump_map.normal_map
 						)
 					)
 				)
@@ -409,7 +421,7 @@ macroscript CoronaToPhysical
 				if (oldMat.clearcoatRoughnessTexmap != undefined) then
 				(
 					-- Copy bitmap from Corona Mtl
-						newMat.coat_rough_map = oldMat.clearcoatRoughnessTexmap
+					newMat.coat_rough_map = oldMat.clearcoatRoughnessTexmap
 				)
 				
 				-- If Corona Advanced Reflection is set to Glossiness
@@ -426,7 +438,7 @@ macroscript CoronaToPhysical
 		)
 		
 		--
-		-- Execute convertToPhysicalMtl function
+		-- Execute convertToPhysicalMtl function scene wide
 		--
 
 		-- Search through all scene materials and convert Corona Physical Mtl to Autodesk Physical Mtl
