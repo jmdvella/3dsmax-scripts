@@ -41,6 +41,12 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_ObjToFBX.ms
+- Exports selected objects to FBX
+- Export folder is Documents\3dsmax (your version)\export
+
+<br />
+
 ### JV_PhysicalToCorona.ms
 - "Script name" in 3dsmax -> Automate PhysicalToCorona
 - Convert Autodesk Physical to Corona Physical materials
