@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_ObjToFBX
-Version: 1.0
+Version: 2.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
