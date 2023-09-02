@@ -10,6 +10,16 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CameraClipping.ms
+- Toggle for Physical Camera clipping 0, 100, 200, 300, off
+
+<br />
+
+### JV_CameraVerticalTilt.ms
+- Toggle Camera Vertical Tilt on/off
+
+<br />
+
 # Script descriptions
 ### JV_CoronaToPhysical.ms
 - "Script name" in 3dsmax -> Automate CoronaToPhysical
@@ -38,6 +48,11 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Corona Bitmap to Standard Bitmap conversion
 - All bitmap settings copied from Corona Bitmap (excluding the Output Curves)
 - Keeps all nodes in the hierarchy eg. Diffuse > Falloff > Basecolor.png or Composite nodes etc. Doesnt really matter how deep the hierarchy goes it just searches for the Bitmaps/CoronaBitmaps
+
+<br />
+
+### JV_ModifiersExample.ms
+- Example of how to create a modifier so that it doesnt give you fail warnings (like applying a loft to an editable polygon).
 
 <br />
 
