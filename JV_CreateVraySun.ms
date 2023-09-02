@@ -16,20 +16,20 @@ macroScript CreateVraySun
 	buttonText:"Create Vray Sun"
 	Icon:#("Lights",2)
 (
+	-- Create Sun
+	vrs = VRaySun name:"VRaySun01" isSelected:on pos:[90,0,100] target:(vrsTarget = Dummy())
+		
+	-- Create Sky linked to Sun
+	useEnvironmentMap = on
+	EnvironmentMap = VRaySky()
+	EnvironmentMap.manual_sun_node = on
+	EnvironmentMap.sun_node = vrs
 
--- Create Sun
-vrs = VRaySun name:"VRaySun01" isSelected:on pos:[90,0,100] target:(vrsTarget = Dummy())
-	
--- Create Sky linked to Sun
-useEnvironmentMap = on
-EnvironmentMap = VRaySky()
-EnvironmentMap.manual_sun_node = on
-EnvironmentMap.sun_node = vrs
-
--- Reset Viewport to be Gradient
-viewport.SetRenderLevel #wireframe 				-- Switch to enable Background Gradient??
-viewport.EnableSolidBackgroundColorMode true	-- Switch to enable then disable??
-viewport.EnableSolidBackgroundColorMode false 	-- Set Background to Gradient
-viewport.SetRenderLevel #smooth 				-- Default Shading
-actionMan.executeAction -844228238 "13" 		-- Standard Shading
-completeRedraw() 
+	-- Reset Viewport to be Gradient
+	viewport.SetRenderLevel #wireframe 				-- Switch to enable Background Gradient??
+	viewport.EnableSolidBackgroundColorMode true	-- Switch to enable then disable??
+	viewport.EnableSolidBackgroundColorMode false 	-- Set Background to Gradient
+	viewport.SetRenderLevel #smooth 				-- Default Shading
+	actionMan.executeAction -844228238 "13" 		-- Standard Shading
+	completeRedraw() 
+)
