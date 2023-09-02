@@ -106,6 +106,24 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_RoughToGloss.ms
+- "Script name" in 3dsmax -> JV_RoughToGloss.ms
+- Convert V-Ray Roughness Materials to V-Ray Glossiness Materials
+- Change Roughness texture with Glossiness by filename suffix example: Leather_Roughness.png -> Leather_Glossiness.png
+- Metal materials: Move Diffuse texture -> Reflection node, Diffuse color: black, Fresnel reflections: off 
+- Legacy tool - Convert V-Ray Roughness materials to V-Ray Glossiness -> Convert to CoronaLegacyMtl
+#### Scripting Note: 
+Change your own Roughness texture naming convention: line 28
+
+<br />
+
+### JV_ShowShadedInViewport.ms
+- Show Shaded Mtl In Viewport for selected objects (Vray only)
+- Targets the Diffuse texture at the bottom of a hierarchy (for example can sort through color correct / falloff/ mix / composite etc. to find the diffuse texture.
+- If using Opacity then defaults to the Material instead so you can see the opacity in viewport.
+
+<br />
+
 ### JV_VrayRoughnessToFBX.ms
 - "Script name" in 3dsmax -> Automate VrayToFBX
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
@@ -132,14 +150,5 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Change/Add your own Vray Classes below comment: -- Add VrayMtl Classes below for conversion
 - Removes Falloff & Color Correction nodes, if you want to keep this remove block: -- Remove Diffuse Falloff node and Color Correction node (Optional)
 
-<br />
 
-### JV_RoughToGloss.ms
-- "Script name" in 3dsmax -> JV_RoughToGloss.ms
-- Convert V-Ray Roughness Materials to V-Ray Glossiness Materials
-- Change Roughness texture with Glossiness by filename suffix example: Leather_Roughness.png -> Leather_Glossiness.png
-- Metal materials: Move Diffuse texture -> Reflection node, Diffuse color: black, Fresnel reflections: off 
-- Legacy tool - Convert V-Ray Roughness materials to V-Ray Glossiness -> Convert to CoronaLegacyMtl
-#### Scripting Note: 
-Change your own Roughness texture naming convention: line 28
 
