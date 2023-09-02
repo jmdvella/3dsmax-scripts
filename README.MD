@@ -10,6 +10,8 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+# Script descriptions
+
 ### JV_CameraClipping.ms
 - Toggle for Physical Camera clipping 0, 100, 200, 300, off
 
@@ -20,7 +22,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
-# Script descriptions
 ### JV_CoronaToPhysical.ms
 - "Script name" in 3dsmax -> Automate CoronaToPhysical
 - Convert Corona Physical to Autodesk Physical materials
