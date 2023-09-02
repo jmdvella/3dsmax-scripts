@@ -52,6 +52,11 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CreateVraySun.ms
+- Toggle Camera Vertical Tilt on/off
+
+<br />
+
 ### JV_ModifiersExample.ms
 - Example of how to create a modifier so that it doesnt give you fail warnings (like applying a loft to an editable polygon).
 
@@ -83,11 +88,21 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 - Normal / Bump
 - Displacement
 - IOR
-- Anisotropy Amount / Rotation
+- Anisotropy Amount / Rotation (remove due to how different 3dsmax version handles anisotropy).
 - Emission / Self Illumination
 - Clearcoat Amount / Roughness / Bump / IOR (but not Absorption as this behaves differently in Corona)
 - Numerical values such as Base Color Amount, Roughness Amount, IOR value etc.
 - Color swatches such as Base Color, Self-Illumination etc.
+
+<br />
+
+### JV_Rotate180X.ms
+- Rotate object 180 degrees on the X axis
+
+<br />
+
+### JV_Rotate180Z.ms
+- Rotate object 180 degrees on the Z axis
 
 <br />
 
