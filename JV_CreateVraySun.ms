@@ -6,7 +6,7 @@ Version: 2.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
-Description-US: Toggle Camera Clipping 0, 100, 200, 300, off
+Description-US: Create Vray Sun, Disable black background on load (default gradient)
 */
 
 macroScript CreateVraySun
