@@ -453,4 +453,5 @@ macroscript PhysicalToCorona
 
 		-- Refresh asset tracker
 		ATSOps.Refresh()
+	)
 )
