@@ -23,7 +23,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 <br />
 
 ### JV_CoronaToPhysical.ms
-- "Script name" in 3dsmax -> Automate CoronaToPhysical
 - Convert Corona Physical to Autodesk Physical materials
 #### Notes:
 - Applies conversion scene wide, not on selected objects.
@@ -69,7 +68,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 <br />
 
 ### JV_PhysicalToCorona.ms
-- "Script name" in 3dsmax -> Automate PhysicalToCorona
 - Convert Autodesk Physical to Corona Physical materials
 #### Notes:
 - Applies conversion scene wide, not on selected objects
@@ -107,7 +105,6 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 <br />
 
 ### JV_RoughToGloss.ms
-- "Script name" in 3dsmax -> JV_RoughToGloss.ms
 - Convert V-Ray Roughness Materials to V-Ray Glossiness Materials
 - Change Roughness texture with Glossiness by filename suffix example: Leather_Roughness.png -> Leather_Glossiness.png
 - Metal materials: Move Diffuse texture -> Reflection node, Diffuse color: black, Fresnel reflections: off 
@@ -124,8 +121,13 @@ Change your own Roughness texture naming convention: line 28
 
 <br />
 
+### JV_SubdivToggle.ms
+- Toggle Subdivision Modifier on/off based on render iterations
+- So if viewport iters = 0, render iters = 2, toggles the viewport to 2 and then back off
+
+<br />
+
 ### JV_VrayRoughnessToFBX.ms
-- "Script name" in 3dsmax -> Automate VrayToFBX
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
 - Importing the FBX to Blender automatically creates a PBR materials (except for glass)
 - Importing the FBX to Cinema4D, use these scripts for your render engine: https://github.com/jmdvella/cinema4d-scripts
@@ -150,5 +152,21 @@ Change your own Roughness texture naming convention: line 28
 - Change/Add your own Vray Classes below comment: -- Add VrayMtl Classes below for conversion
 - Removes Falloff & Color Correction nodes, if you want to keep this remove block: -- Remove Diffuse Falloff node and Color Correction node (Optional)
 
+<br />
 
+### JV_VrayToBlenderGLB.ms
+- Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX 
+- Importing the FBX to Blender creates a PBR materials - which need to be converted using the GLB converter in Blender (in my blender script section).
+- Automatically locates any file that has "Occlusion" and "Ambient" or "AO" in the same directory as the Diffuse texture and places this in the specular channel.
+- The specular is not the AO channel, however the blender python script will convert this to Occlusion for GLB export - this is due to FBX material support limitations.
+- This script will delete all your subdivision modifiers, be aware and save your files before using it.
+- This script also assumes you have set up your glass/liquid materials correctly for GLB (working correctly in Substance Painter for example). This means your AO, Opacity and Diffuse textures support opacity in realtime. 
 
+<br />
+
+### JV_VrayToGLB.ms
+- Convert V-Ray Roughness Materials to Autodesk glTF materials, ready for export directly from 3dsmax 2024.
+- Automatically locates any file that has "Occlusion" and "Ambient" or "AO" in the same directory as the Diffuse texture.
+- This script will delete all your subdivision modifiers, be aware and save your files before using it.
+- This script also assumes you have set up your glass/liquid materials correctly for GLB (working correctly in Substance Painter for example). This means your AO, Opacity and Diffuse textures support opacity in realtime. 
+- Warning: Unfortunately Autodesk will label all your textures/materials with the prefix adsk. This is currently unavoidable which is why I still use the JV_VrayToBlenderGLB.ms script instead. However if this doesnt bother you then its much faster this way. 
