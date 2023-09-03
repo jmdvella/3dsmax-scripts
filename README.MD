@@ -155,6 +155,7 @@ Change your own Roughness texture naming convention: line 28
 <br />
 
 ### JV_VrayToBlenderGLB.ms
+- Install the [jv_convert_to_glb.py](https://github.com/jmdvella/blender-scripts/blob/main/jv_convert_to_glb.py)
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX 
 - Importing the FBX to Blender creates a PBR materials - which need to be converted using the GLB converter in Blender (in my blender script section).
 - Automatically locates any file that has "Occlusion" and "Ambient" or "AO" in the same directory as the Diffuse texture and places this in the specular channel.
