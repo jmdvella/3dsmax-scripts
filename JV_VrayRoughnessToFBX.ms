@@ -2,9 +2,9 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayRoughnessToFBX
-Version: 1.1.1
+Version: 1.2
 Software: 3D Studio Max 2021.3
-Engine: V-Ray 5.00.04
+Engine: V-Ray 5.20.23
 Language: Maxscript
 Description-US: Convert Vray Roughness materials to Standard for export to FBX
 */
@@ -15,7 +15,6 @@ macroscript VrayToFBX
 	tooltip:"Automate VrayToFBX"
 	buttonText:"Vray To FBX"
 	Icon:#("SchematicView",2)
-
 (
 	-- start an undo block
 	undo on
@@ -143,7 +142,24 @@ macroscript VrayToFBX
 		i = newMat
 	)
 		
-	-- Add VrayMtl Classes below for conversion
+	-- Delete all Subdivision modifiers
+	for obj in objects do
+	(
+		-- Check if the object has any modifiers
+		if obj.modifiers.count > 0 do
+		(
+			-- Loop through the modifiers of the object
+			for mod in obj.modifiers do
+			(
+				-- Check if the modifier is OpenSubdiv, TurboSmooth, or MeshSmooth
+				if (mod.name == "OpenSubdiv" or mod.name == "TurboSmooth" or mod.name == "MeshSmooth") do
+				(
+					-- Delete the modifier
+					deleteModifier obj mod
+				)
+			)
+		)
+	)
 
 	-- Convert VRay2SidedMtl to VrayMtl
 	vrayMtlList = getClassInstances VRay2SidedMtl
