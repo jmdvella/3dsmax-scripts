@@ -1,5 +1,3 @@
--- fn mod_chamfer =
--- (
 	-- Switch to modifiers tab
 	max modify mode
 
@@ -16,4 +14,3 @@
 
 	-- Instance modifier on sub-object level or muiltiple objects
 	if modPanel.validModifier theMod then modPanel.addModToSelection theMod
--- )
