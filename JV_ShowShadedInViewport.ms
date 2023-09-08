@@ -2,11 +2,11 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_ShowShadedInViewport
-Version: 1.0
+Version: 4.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
-Description-US: Show Shaded Mtl In Viewport for selected objects (Vray only)
+Description-US: Show Shaded Mtl In Viewport
 */
 
 macroscript ShowShadedMtl
@@ -20,17 +20,18 @@ macroscript ShowShadedMtl
 		
 	for obj in selection do
 	(
-		for i in getClassInstances VRayMtl do
+		for i in getClassInstances VRayMtl target:obj do
 		(
 			-- Enable "Show Shaded..." for Diffuse texture instead of Material
 			if i.texmap_diffuse != undefined do
 			(
-				for b in getClassInstances Bitmaptexture target:i.texmap_diffuse do 
+				for b in (getClassInstances Bitmaptexture target:i.texmap_diffuse) + (getClassInstances VRayBitmap target:i.texmap_diffuse) do 
 				(
 					showTextureMap i b On
 					exit
 				)
 			)
+
 			-- If material using vraycolor enable "Show Shaded..." for Material
 			if classof i.texmap_diffuse == VRayColor do
 			(
@@ -43,4 +44,9 @@ macroscript ShowShadedMtl
 			)
 		)
 	)
+	
+	-- Set current viewport to Shaded & Standard
+	viewSetting = NitrousGraphicsManager.GetActiveViewportSetting()
+	viewSetting.ViewportPreset = #standard 
+	viewSetting.VisualStyleMode = #shaded
 )
