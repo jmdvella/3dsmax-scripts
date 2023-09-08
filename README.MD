@@ -167,7 +167,7 @@ Change your own Roughness texture naming convention: line 28
 ### JV_VrayToBlenderGLB.ms
 - You can watch the [youtube video](https://youtu.be/3L2XOsLHqto) for detailed instructions.
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX 
-- Automatically locates any file that has "Occlusion" and "Ambient" or "AO" in the same directory as the Diffuse texture and places this in the specular channel.
+- Automatically locates any file that has "Occlusion" and "Ambient" or "AO" in the same directory as the Roughness texture and places this in the specular channel.
 - The specular is not the AO channel, however the blender python script will convert this to Occlusion for GLB export - this is due to FBX material support limitations.
 - This script will delete all your subdivision modifiers, be aware and save your files before using it.
 - This script also assumes you have set up your glass/liquid materials correctly for GLB (working correctly in Substance Painter for example). This means your AO, Opacity and Diffuse textures support opacity in realtime. 
