@@ -119,6 +119,7 @@ Change your own Roughness texture naming convention: line 28
 - Targets the Diffuse texture at the bottom of a hierarchy (for example can sort through color correct / falloff/ mix / composite etc. to find the diffuse texture.
 - If using Opacity then defaults to the Material instead so you can see the opacity in viewport.
 - Supports Bitmap & VrayBitmap.
+- Sets the current viewport to Shaded & Standard
 
 <br />
 
