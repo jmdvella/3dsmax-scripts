@@ -118,6 +118,15 @@ Change your own Roughness texture naming convention: line 28
 - Show Shaded Mtl In Viewport for selected objects (Vray only)
 - Targets the Diffuse texture at the bottom of a hierarchy (for example can sort through color correct / falloff/ mix / composite etc. to find the diffuse texture.
 - If using Opacity then defaults to the Material instead so you can see the opacity in viewport.
+- Supports Bitmap & VrayBitmap.
+
+<br />
+
+### JV_ShowShadedInViewportCorona.ms
+- Show Shaded Mtl In Viewport for selected objects (Corona only)
+- Targets the Diffuse texture at the bottom of a hierarchy (for example can sort through color correct / falloff/ mix / composite etc. to find the diffuse texture.
+- If using Opacity then defaults to the Material instead so you can see the opacity in viewport.
+- Supports Corona Legacy Mtl, Corona Physical Mtl, Corona Bitmap and Bitmap.
 
 <br />
 
