@@ -14,6 +14,7 @@ macroscript VrayToGLB
 	tooltip:"Automate VrayToBlenderGLB"
 	buttonText:"Vray To Blender GLB"
 	Icon:#("Containers",6)
+
 (
 -- 	clearListener()
 	
@@ -26,7 +27,7 @@ macroscript VrayToGLB
 		(
 			local found_map_count = 0
 			for x in getClassInstances bitmaptexture do
-			(
+			(3
 				for y in refs.dependents x where y == mat do
 				(
 					found_map_count += 1
@@ -164,8 +165,29 @@ macroscript VrayToGLB
 			)
 			else
 			(
-				-- Add missing texture to missingTex array
-				append missingTex (newMat.name as string + " - Missing: Metal Texture")
+				-- Look in the texture directory for a "Metal" texture otherwise flag user none exist
+				try
+				(
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
+					(
+						-- Copy roughness texture
+						newMat.reflectionMap = copy found_bitmap
+					)
+					-- Material name
+					newMat.reflectionMap.name = "metal"
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) "Rough" "Metal"
+				)
+				catch
+				(
+					-- Add missing texture to missingTex array
+					append missingTex (newMat.name as string + " - Missing: Metal Texture")
+					
+					-- Remove copied Rough texture
+					newMat.reflectionMap = undefined
+				)
+				
 			)
 
 			-- Occlusion
@@ -206,13 +228,48 @@ macroscript VrayToGLB
 				(
 					newMat.bumpMap = i.texmap_bump.normal_map
 				)
-				else 
+				else
 				(
 					-- add the current texture from the bump node 
 					newMat.bumpMap = i.texmap_bump
 					-- Add missing texture to missingTex array
 					append missingTex (newMat.name as string + " - Missing: Normal Texture")
 				)
+			)
+			else 
+			(
+				try
+				(
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
+					(
+						-- Copy roughness texture
+						newMat.bumpMap = copy found_bitmap
+					)
+					-- Material name
+					newMat.bumpMap.name = "normal"
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					try
+					(
+						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
+					)
+					catch()
+					-- if Cannot find Normal_OpenGL use anything with Normal in the filename
+					try
+					(
+						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
+					)
+					catch()
+				)
+				catch
+				(
+					
+					-- Add missing texture to missingTex array
+					append missingTex (newMat.name as string + " - Missing: Normal Texture")
+					-- Remove copied Rough texture
+					newMat.bumpMap = undefined
+				)
+					
 			)
 			
 			-- Convert DirectX Normal texture to OpenGL (Optional) 	<--------------
@@ -376,7 +433,6 @@ macroscript VrayToGLB
 			)
 			catch()
 			*/
-			
 			-- Convert VrayMtl to StandardMtl
 			i = newMat
 		)
