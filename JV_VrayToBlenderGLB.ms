@@ -16,6 +16,8 @@ macroscript VrayToGLB
 	buttonText:"Vray To Blender GLB"
 	Icon:#("Containers",6)
 (
+-- 	clearListener()
+	
 	undo on
 	
 	with animate off 
@@ -244,8 +246,8 @@ macroscript VrayToGLB
 			)
 			
 			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
-			-- this will work (2 prefixes).If not then if you want to use this section you need to change the local regex variable.
-			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures present.
+			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
+			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
 			
 			-- Glass/Liquid, not in a multi-sub and missing textures
 			/*
@@ -258,8 +260,10 @@ macroscript VrayToGLB
 					-- current material name (Glass/liquid etc)
 					local material_name = i.name
 					
+					-- regex pattern
+					local rgx_pattern = "^(\\w{3}_\\w{4}_\\w+)_"
 					-- specific regex that finds prefix_prefix_name 
-					local regex = dotNetObject "System.Text.RegularExpressions.Regex" "^(\\w{3}_\\w{4}_\\w+)_"
+					local regex = dotNetObject "System.Text.RegularExpressions.Regex" rgx_pattern
 					-- Find the first match in the materialName
 					local match = (regex.Match material_name)
 					-- Check if a match was found
@@ -396,6 +400,37 @@ macroscript VrayToGLB
 				)
 			)
 		)
+		
+		-- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count
+		multiSubList = getClassInstances MultiMaterial target:rootnode
+		for mat in multiSubList do
+		(
+			-- Variable to track the maximum bitmap count
+			max_count = 0  
+			-- Variable to store the material with the maximum bitmap count
+			max_material = undefined  
+			
+			-- Loop through sub-materials of the multi-sub material
+			for subMatIndex = 1 to mat.numsubs do
+			(
+				subMat = mat[subMatIndex]
+				m_count = CountBitmapsFromMaterial subMat
+				
+				-- Check if the current sub-material has a higher bitmap count than the previous maximum
+				if m_count > max_count do
+				(
+					max_count = m_count
+					max_material = subMat
+				)
+			)
+			
+			-- Replace the Multi/Sub-Object material with the sub-material
+			if max_material != undefined do
+			(
+				replaceInstances mat max_material
+				max_material.name = mat.name
+			)
+		)
 
 		-- Convert VRay2SidedMtl to VrayMtl
 		vrayMtlList = getClassInstances VRay2SidedMtl target:rootnode
@@ -463,37 +498,7 @@ macroscript VrayToGLB
 			)
 		)
 		
-		-- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count
-		multiSubList = getClassInstances MultiMaterial target:rootnode
-		for mat in multiSubList do
-		(
-			-- Variable to track the maximum bitmap count
-			max_count = 0  
-			-- Variable to store the material with the maximum bitmap count
-			max_material = undefined  
-			
-			-- Loop through sub-materials of the multi-sub material
-			for subMatIndex = 1 to mat.numsubs do
-			(
-				subMat = mat[subMatIndex]
-				m_count = CountBitmapsFromMaterial subMat
-				
-				-- Check if the current sub-material has a higher bitmap count than the previous maximum
-				if m_count > max_count do
-				(
-					max_count = m_count
-					max_material = subMat
-				)
-			)
-			
-			-- Replace the Multi/Sub-Object material with the sub-material
-			if max_material != undefined do
-			(
-				replaceInstances mat max_material
-				max_material.name = mat.name
-			)
-		)
-		
+		-- Print missing textures in the MAXScript listner and prompt user about missing files
 		if missingTex.count != 0 then
 		(
 			for i in missingTex do
