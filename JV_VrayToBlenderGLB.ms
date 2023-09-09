@@ -16,8 +16,6 @@ macroscript VrayToGLB
 	buttonText:"Vray To Blender GLB"
 	Icon:#("Containers",6)
 (
-	clearListener()
-	
 	undo on
 	
 	with animate off 
