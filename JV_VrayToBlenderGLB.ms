@@ -8,7 +8,6 @@ Engine: V-Ray 5.20.23
 Language: Maxscript
 Description-US: Convert Vray Roughness materials to Standard for FBX to GLB export
 */
-
 macroscript VrayToGLB
 	category:"Vella" 
 	internalcategory:"Automate"
@@ -431,34 +430,7 @@ macroscript VrayToGLB
 				max_material.name = mat.name
 			)
 		)
-
-		-- Convert VRay2SidedMtl to VrayMtl
-		vrayMtlList = getClassInstances VRay2SidedMtl target:rootnode
-		for i in vrayMtlList do
-		(
-			-- Replace VRay2SidedMtl with Front material
-			p = i.frontMtl 
-			replaceinstances i p
-		)
-			
-		-- Convert VRayLightMtl to VrayMtl
-		vrayMtlList = getClassInstances VRayLightMtl target:rootnode
-		for i in vrayMtlList do
-		(
-			-- Copy Light color to Self Illumination in VrayMtl
-			p = VRayMtl()
-			p.name = i.name
-			p.selfIllumination = i.color
-			
-			-- Copy Light Color texture
-			if i.texmap != undefined then
-			(
-				p.texmap_self_illumination = i.texmap
-			)
-			
-			replaceinstances i p
-		)
-			
+		
 		-- Search through Multi-Sub to find/replace empty Glass/Liquid materials with any other material in that Multi-Sub
 		multiSubList = getClassInstances multiSubMaterial target:rootnode
 		for i in multiSubList do
@@ -485,6 +457,33 @@ macroscript VrayToGLB
 					)
 				)
 			)
+		)
+
+		-- Convert VRay2SidedMtl to VrayMtl
+		vrayMtlList = getClassInstances VRay2SidedMtl target:rootnode
+		for i in vrayMtlList do
+		(
+			-- Replace VRay2SidedMtl with Front material
+			p = i.frontMtl 
+			replaceinstances i p
+		)
+			
+		-- Convert VRayLightMtl to VrayMtl
+		vrayMtlList = getClassInstances VRayLightMtl target:rootnode
+		for i in vrayMtlList do
+		(
+			-- Copy Light color to Self Illumination in VrayMtl
+			p = VRayMtl()
+			p.name = i.name
+			p.selfIllumination = i.color
+			
+			-- Copy Light Color texture
+			if i.texmap != undefined then
+			(
+				p.texmap_self_illumination = i.texmap
+			)
+			
+			replaceinstances i p
 		)
 
 		-- Convert VrayMtl to Standard material (This should always be last after converting other VrayMtl classes to VrayMtl)
