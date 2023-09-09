@@ -7,9 +7,6 @@ Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
 Description-US: Convert Vray Roughness materials to Standard for FBX to GLB export
-	
--- TODO: 
--- Fix Glass when not in multi-sub. Will need a new regex to locate based on material name
 */
 
 macroscript VrayToGLB
