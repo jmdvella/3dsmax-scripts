@@ -14,7 +14,6 @@ macroscript VrayToGLB
 	tooltip:"Automate VrayToBlenderGLB"
 	buttonText:"Vray To Blender GLB"
 	Icon:#("Containers",6)
-
 (
 -- 	clearListener()
 	
