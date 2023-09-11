@@ -2,13 +2,13 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayToBlenderGLB
-Version: 2.0
+Version: 3.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
 Description-US: Convert Vray Roughness materials to Standard for FBX to GLB export
 */
-macroscript VrayToGLB
+macroscript VrayToBlenderGLB
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Automate VrayToBlenderGLB"
@@ -110,7 +110,7 @@ macroscript VrayToGLB
 -- 			 return (bitmap_dir + found_bitmap + (getFilenameType i))
 		)
 		
-		-- Variable to collect missing textures
+		-- Array to collect missing textures
 		local missingTex = #()
 
 		-- Function to replace VrayMtl with StandardMtl and setup PBR settings for FBX/Blender
@@ -159,7 +159,7 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_metalness) do 
 				(
-				newMat.reflectionMap = found_bitmap
+					newMat.reflectionMap = found_bitmap
 				)
 			)
 			else
@@ -186,7 +186,6 @@ macroscript VrayToGLB
 					-- Remove copied Rough texture
 					newMat.reflectionMap = undefined
 				)
-				
 			)
 
 			-- Occlusion
@@ -262,7 +261,6 @@ macroscript VrayToGLB
 				)
 				catch
 				(
-					
 					-- Add missing texture to missingTex array
 					append missingTex (newMat.name as string + " - Missing: Normal Texture")
 					-- Remove copied Rough texture
@@ -303,14 +301,13 @@ macroscript VrayToGLB
 			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
 			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
 			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
-			
-			-- Glass/Liquid, not in a multi-sub and missing textures
 			/*
-			try
+			-- Glass/Liquid, not in a multi-sub and missing textures
+			if (MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
+			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
+			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true) do
 			(
-				if (MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
-				(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
-				(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true) do
+				try
 				(
 					-- current material name (Glass/liquid etc)
 					local material_name = i.name
@@ -419,7 +416,7 @@ macroscript VrayToGLB
 					)
 					
 					-- Create Occlusion, copy from roughness (gamma is set correctly on roughness)
-					if i.texmap_opacity == undefined then
+					try
 					(
 						-- Copy roughness texture
 						newMat.specularMap = copy created_roughness
@@ -428,10 +425,12 @@ macroscript VrayToGLB
 						-- Material name
 						newMat.specularMap.name = "ao"
 					)
+					catch()
 				)
+				catch()
 			)
-			catch()
 			*/
+			
 			-- Convert VrayMtl to StandardMtl
 			i = newMat
 		)
