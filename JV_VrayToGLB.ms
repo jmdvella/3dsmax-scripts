@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayToGLB
-Version: 2.0
+Version: 3.0
 Software: 3D Studio Max 2024.1
 Engine: V-Ray 6.10.08
 Language: Maxscript
@@ -54,7 +54,7 @@ macroscript VrayToGLB
 			return undefined
 		)
 		
-		-- Function to replace bitmaps
+		-- Function to replace bitmaps by searching through the directory where other textures are
 		fn ReplaceBitmap i old_pattern replace_pattern = 
 		(
 			-- Get the directory path & filename of the bitmap
@@ -96,8 +96,6 @@ macroscript VrayToGLB
 				(
 					-- Change previous filename to new found filename
 					found_bitmap = m
-					-- Exit loop after finding first match
--- 					exit
 					return (bitmap_dir + found_bitmap + (getFilenameType i))
 				)
 			)
@@ -171,7 +169,7 @@ macroscript VrayToGLB
 					-- Add missing texture to missingTex array
 					append missingTex (newMat.name as string + " - Missing: Metal Texture")
 					
-					-- Remove copied Rough texture
+					-- Remove texture if not found
 					newMat.metalnessMap = undefined
 				)
 			)
@@ -191,6 +189,13 @@ macroscript VrayToGLB
 					newMat.ambientOcclusionMap.name = "ao"
 					-- Replace with matching new name - (?i). is regex pattern for ignorecase
 					newMat.ambientOcclusionMap.filename = ReplaceBitmap (newMat.ambientOcclusionMap.filename) "Rough" "AO|Ambient|Occlusion"
+					
+					-- If bitmap filename contains the words "Channel2" then change the UV channel to 2
+					if (MatchPattern (newMat.ambientOcclusionMap.filename) pattern:"*Channel2*" ignoreCase:true) then
+					(
+						newMat.ambientOcclusionMap.coords.mapChannel = 2
+					)
+					
 				)
 			)
 			catch
@@ -234,23 +239,15 @@ macroscript VrayToGLB
 					-- Material name
 					newMat.normalMap.name = "normal"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					try
-					(
-						newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal_OpenGL"
-					)
-					catch()
+					newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal_OpenGL"
 					-- if Cannot find Normal_OpenGL use anything with Normal in the filename
-					try
-					(
-						newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal"
-					)
-					catch()
+					newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal"
 				)
 				catch
 				(
 					-- Add missing texture to missingTex array
 					append missingTex (newMat.name as string + " - Missing: Normal Texture")
-					-- Remove copied Rough texture
+					-- Remove texture if not found
 					newMat.normalMap = undefined
 				)
 			)
@@ -281,18 +278,50 @@ macroscript VrayToGLB
 				newMat.AlphaMap = i.texmap_opacity
 				
 				-- Opacity settings
-				newMat.alphaMode = 2
+				newMat.alphaMode = 2	-- Mask mode
 				newMat.alphaCutoff = 0.1
+			)
+			else
+			(
+				try
+				(
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
+					(
+						-- Copy roughness texture
+						newMat.AlphaMap = copy found_bitmap
+					)
+					-- Material name
+					newMat.AlphaMap.name = "opacity"
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					newMat.AlphaMap.filename = ReplaceBitmap (newMat.AlphaMap.filename) "Rough" "Alpha|Opacity"
+
+					-- Opacity settings 
+					newMat.alphaMode = 2	-- Mask mode
+					newMat.alphaCutoff = 0.1
+					
+					if (MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
+					(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
+					(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true) do
+					(
+						newMat.alphaMode = 3	-- Blend mode
+					)
+				)
+				catch
+				(
+					-- Remove texture if not found
+					newMat.AlphaMap = undefined
+				)
 			)
 			
 			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
 			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
 			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
-
-			-- Glass/Liquid
-			if (MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
+			/*
+			-- Glass/Liquid, replace when there is no diffuse texture 
+			if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
 			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
-			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true) do
+			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true)) and (i.texmap_diffuse == undefined) do
 			(
 				try
 				(
@@ -383,17 +412,9 @@ macroscript VrayToGLB
 						newMat.normalMap = copy created_roughness
 						
 						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						try
-						(
-							newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal_OpenGL"
-						)
-						catch()
+						newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal_OpenGL"
 						-- if Cannot find Normal_OpenGL use anything with Normal in the filename
-						try
-						(
-							newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal"
-						)
-						catch()
+						newMat.normalMap.filename = ReplaceBitmap (newMat.normalMap.filename) "Rough" "Normal"
 						-- Material name
 						newMat.normalMap.name = "normal"
 					)
@@ -426,6 +447,7 @@ macroscript VrayToGLB
 				)
 				catch()
 			)
+			*/
 			
 			-- Convert textures
 			i = newMat
@@ -504,7 +526,7 @@ macroscript VrayToGLB
 		)
 		
 		-- Convert VRay2SidedMtl to VrayMtl
-		local vrayMtlList = getClassInstances VRay2SidedMtl
+		local vrayMtlList = getClassInstances VRay2SidedMtl target:rootnode
 		for i in vrayMtlList do
 		(
 			-- Replace VRay2SidedMtl with Front material
