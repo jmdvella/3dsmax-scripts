@@ -185,7 +185,7 @@ macroscript VrayToGLB
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
-						newMat.ambientOcclusionMap = copy i.texmap_reflectionGlossiness
+						newMat.ambientOcclusionMap = copy found_bitmap
 					)
 					-- Material name
 					newMat.ambientOcclusionMap.name = "ao"
@@ -232,7 +232,7 @@ macroscript VrayToGLB
 						newMat.normalMap = copy found_bitmap
 					)
 					-- Material name
-					newMat.bumpMap.name = "normal"
+					newMat.normalMap.name = "normal"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
 					try
 					(
@@ -288,8 +288,7 @@ macroscript VrayToGLB
 			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
 			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
 			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
-			
-			/*
+
 			-- Glass/Liquid
 			if (MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
 			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
@@ -427,7 +426,6 @@ macroscript VrayToGLB
 				)
 				catch()
 			)
-			*/
 			
 			-- Convert textures
 			i = newMat
