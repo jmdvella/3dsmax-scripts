@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayToBlenderGLB
-Version: 3.0
+Version: 4.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
@@ -26,7 +26,7 @@ macroscript VrayToBlenderGLB
 		(
 			local found_map_count = 0
 			for x in getClassInstances bitmaptexture do
-			(3
+			(
 				for y in refs.dependents x where y == mat do
 				(
 					found_map_count += 1
@@ -35,7 +35,7 @@ macroscript VrayToBlenderGLB
 			-- return count of found bitmaps
 			found_map_count
 		)
-			
+		
 		-- Function to populate Glass/Liquid (empty) materials with another material in its Multi-Sub
 		fn FindReplacementMaterial multiSubMat =
 		(
@@ -101,13 +101,9 @@ macroscript VrayToBlenderGLB
 				(
 					-- Change previous filename to new found filename
 					found_bitmap = m
-					-- Exit loop after finding first match
--- 					exit
 					return (bitmap_dir + found_bitmap + (getFilenameType i))
 				)
 			)
-			-- Return changed filename
--- 			 return (bitmap_dir + found_bitmap + (getFilenameType i))
 		)
 		
 		-- Array to collect missing textures
@@ -247,17 +243,10 @@ macroscript VrayToBlenderGLB
 					-- Material name
 					newMat.bumpMap.name = "normal"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					try
-					(
-						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
-					)
-					catch()
+					newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
+
 					-- if Cannot find Normal_OpenGL use anything with Normal in the filename
-					try
-					(
-						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
-					)
-					catch()
+					newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
 				)
 				catch
 				(
@@ -297,15 +286,36 @@ macroscript VrayToBlenderGLB
 			(
 				newMat.opacityMap = i.texmap_opacity
 			)
+			else
+			(
+				try
+				(
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
+					(
+						-- Copy roughness texture
+						newMat.opacityMap = copy found_bitmap
+					)
+					-- Material name
+					newMat.opacityMap.name = "opacity"
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					newMat.opacityMap.filename = ReplaceBitmap (newMat.opacityMap.filename) "Rough" "Alpha|Opacity"
+				)
+				catch
+				(
+					-- Remove texture if not found
+					newMat.opacityMap = undefined
+				)
+			)
 			
 			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
 			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
 			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
 			/*
 			-- Glass/Liquid, not in a multi-sub and missing textures
-			if (MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
+			if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
 			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
-			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true) do
+			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true)) and (i.texmap_diffuse == undefined) do
 			(
 				try
 				(
@@ -389,17 +399,9 @@ macroscript VrayToBlenderGLB
 						newMat.bumpMap = copy created_roughness
 						
 						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						try
-						(
-							newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
-						)
-						catch()
+						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
 						-- if Cannot find Normal_OpenGL use anything with Normal in the filename
-						try
-						(
-							newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
-						)
-						catch()
+						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
 						-- Material name
 						newMat.bumpMap.name = "normal"
 					)
@@ -416,16 +418,12 @@ macroscript VrayToBlenderGLB
 					)
 					
 					-- Create Occlusion, copy from roughness (gamma is set correctly on roughness)
-					try
-					(
-						-- Copy roughness texture
-						newMat.specularMap = copy created_roughness
-						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						newMat.specularMap.filename = ReplaceBitmap (newMat.specularMap.filename) "Rough" "AO|Ambient|Occlusion"
-						-- Material name
-						newMat.specularMap.name = "ao"
-					)
-					catch()
+					-- Copy roughness texture
+					newMat.specularMap = copy created_roughness
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					newMat.specularMap.filename = ReplaceBitmap (newMat.specularMap.filename) "Rough" "AO|Ambient|Occlusion"
+					-- Material name
+					newMat.specularMap.name = "ao"
 				)
 				catch()
 			)
@@ -512,7 +510,7 @@ macroscript VrayToBlenderGLB
 				)
 			)
 		)
-
+		
 		-- Convert VRay2SidedMtl to VrayMtl
 		vrayMtlList = getClassInstances VRay2SidedMtl target:rootnode
 		for i in vrayMtlList do
