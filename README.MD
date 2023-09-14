@@ -51,6 +51,14 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CoronaToPhysicalBitmapsOnly.ms
+- Convert Corona Physical to Autodesk Physical materials
+#### Notes:
+- This one differs from JV_CoronaToPhysical.ms as it strips the whole hierarchy to find the bitmap. So removes all falloff/mix/coronamix etc nodes and just puts the bitmap into the associated Physical material slot.
+- Applies conversion scene wide, not on selected objects.
+
+<br />
+
 ### JV_CreateVraySun.ms
 - Toggle Camera Vertical Tilt on/off
 
