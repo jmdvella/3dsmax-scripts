@@ -117,7 +117,7 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_diffuse) do 
 				(
-					newMat.baseColorMap = i.texmap_diffuse
+					newMat.baseColorMap = found_bitmap
 				)
 			)
 			else
@@ -132,7 +132,7 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 				(
-					newMat.roughnessMap = i.texmap_reflectionGlossiness
+					newMat.roughnessMap = found_bitmap
 				)
 			)
 			else
@@ -146,7 +146,7 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_metalness) do 
 				(
-					newMat.metalnessMap = i.texmap_metalness
+					newMat.metalnessMap = found_bitmap
 				)
 			)
 			else
@@ -179,7 +179,7 @@ macroscript VrayToGLB
 			(
 				if i.texmap_reflectionGlossiness != undefined then
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -216,7 +216,12 @@ macroscript VrayToGLB
 			(
 				if (classof i.texmap_bump == VRayNormalMap) then
 				(
-					newMat.normalMap = i.texmap_bump.normal_map
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_bump.normal_map) do 
+					(
+						newMat.normalMap = found_bitmap
+					)
+-- 					newMat.normalMap = i.texmap_bump.normal_map
 				)
 				else
 				(
@@ -230,7 +235,7 @@ macroscript VrayToGLB
 			(
 				try
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -268,14 +273,19 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_self_illumination) do 
 				(
-					newMat.emissionMap = i.texmap_self_illumination
+					newMat.emissionMap = i.found_bitmap
 				)
 			)
 			
 			-- Opacity
 			if i.texmap_opacity != undefined then
 			(
-				newMat.AlphaMap = i.texmap_opacity
+				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_opacity) do 
+				(
+					newMat.AlphaMap = i.found_bitmap
+				)
+-- 				newMat.AlphaMap = i.texmap_opacity
 				
 				-- Opacity settings
 				newMat.alphaMode = 2	-- Mask mode
@@ -285,7 +295,7 @@ macroscript VrayToGLB
 			(
 				try
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -448,7 +458,6 @@ macroscript VrayToGLB
 				catch()
 			)
 			*/
-			
 			-- Convert textures
 			i = newMat
 		)
@@ -549,7 +558,7 @@ macroscript VrayToGLB
 			(
 				print i
 			)
-			messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.")
+-- 			messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.")
 		)
 		-- free the array from memory, aka garbage collect it
 		free missingTex
