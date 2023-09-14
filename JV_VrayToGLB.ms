@@ -137,6 +137,7 @@ macroscript VrayToGLB
 			)
 			else
 			(
+				-- Add missing texture to missingTex array
 				append missingTex (newMat.name as string + " - Missing: Roughness Texture")
 			)
 			
@@ -153,7 +154,7 @@ macroscript VrayToGLB
 			(
 				try
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -221,7 +222,6 @@ macroscript VrayToGLB
 					(
 						newMat.normalMap = found_bitmap
 					)
--- 					newMat.normalMap = i.texmap_bump.normal_map
 				)
 				else
 				(
@@ -273,7 +273,7 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_self_illumination) do 
 				(
-					newMat.emissionMap = i.found_bitmap
+					newMat.emissionMap = found_bitmap
 				)
 			)
 			
@@ -283,9 +283,8 @@ macroscript VrayToGLB
 				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
 				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_opacity) do 
 				(
-					newMat.AlphaMap = i.found_bitmap
+					newMat.AlphaMap = found_bitmap
 				)
--- 				newMat.AlphaMap = i.texmap_opacity
 				
 				-- Opacity settings
 				newMat.alphaMode = 2	-- Mask mode
@@ -323,11 +322,11 @@ macroscript VrayToGLB
 					newMat.AlphaMap = undefined
 				)
 			)
-			
+			/*
 			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
 			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
 			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
-			/*
+			
 			-- Glass/Liquid, replace when there is no diffuse texture 
 			if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
 			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
@@ -558,7 +557,7 @@ macroscript VrayToGLB
 			(
 				print i
 			)
- 			messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.")
+			messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.")
 		)
 		-- free the array from memory, aka garbage collect it
 		free missingTex
