@@ -8,6 +8,7 @@ Engine: V-Ray 5.20.23
 Language: Maxscript
 Description-US: Convert Vray Roughness materials to Standard for FBX to GLB export
 */
+
 macroscript VrayToBlenderGLB
 	category:"Vella" 
 	internalcategory:"Automate"
@@ -146,6 +147,7 @@ macroscript VrayToBlenderGLB
 			)
 			else
 			(
+				-- Add missing texture to missingTex array
 				append missingTex (newMat.name as string + " - Missing: Roughness Texture")
 			)
 			
@@ -163,7 +165,7 @@ macroscript VrayToBlenderGLB
 				-- Look in the texture directory for a "Metal" texture otherwise flag user none exist
 				try
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -190,7 +192,7 @@ macroscript VrayToBlenderGLB
 				if i.texmap_reflectionGlossiness != undefined then
 				(
 					
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -220,7 +222,11 @@ macroscript VrayToBlenderGLB
 			(
 				if (classof i.texmap_bump == VRayNormalMap) then
 				(
-					newMat.bumpMap = i.texmap_bump.normal_map
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_bump.normal_map) do 
+					(
+						newMat.bumpMap = found_bitmap
+					)
 				)
 				else
 				(
@@ -234,7 +240,7 @@ macroscript VrayToBlenderGLB
 			(
 				try
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
@@ -284,13 +290,19 @@ macroscript VrayToBlenderGLB
 			-- Opacity
 			if i.texmap_opacity != undefined then
 			(
+				-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_opacity) do 
+				(
+					newMat.opacityMap = found_bitmap
+				)
+				
 				newMat.opacityMap = i.texmap_opacity
 			)
 			else
 			(
 				try
 				(
-					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
+					-- Copy roughness texture and search for bitmap in directory
 					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 					(
 						-- Copy roughness texture
