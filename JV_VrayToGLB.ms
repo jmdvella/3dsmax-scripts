@@ -558,7 +558,7 @@ macroscript VrayToGLB
 			(
 				print i
 			)
--- 			messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.")
+ 			messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.")
 		)
 		-- free the array from memory, aka garbage collect it
 		free missingTex
