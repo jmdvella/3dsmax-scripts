@@ -97,7 +97,7 @@ macroscript VrayToFBX
 				try
 				(
 					-- look for bitmap in sub-nodes such as falloff/color-correct etc.
-					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_metalness) do 
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_opacity) do 
 					(
 						newMat.opacityMap = i.texmap_opacity
 					)
