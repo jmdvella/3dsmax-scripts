@@ -73,9 +73,8 @@ macroscript VrayToFBX
 				(
 					newMat.reflectionMap = found_bitmap
 				)
-				
-				-- Enable Metal in Standard Material
-				newMat.reflectionMapEnable = on
+				-- Set Coordinates to Texture instead of Environment
+				newMat.reflectionMap.coords.mappingType = 0
 			)
 			else
 			(
@@ -87,7 +86,7 @@ macroscript VrayToFBX
 			-- Convert Metal numeric value to Reflection value
 			if i.reflection_metalness != 0 then
 			(
-				newMat.reflectionMapEnable = on
+-- 				newMat.reflectionMapEnable = on
 				newMat.reflectionMapAmount = (i.reflection_metalness * 100)
 			)
 			
