@@ -147,6 +147,7 @@ Change your own Roughness texture naming convention: line 28
 <br />
 
 ### JV_VrayRoughnessToFBX.ms
+- You can watch the [youtube video](https://youtu.be/0FT6Fok-MtY) for detailed instructions.
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
 - Importing the FBX to Blender automatically creates a PBR materials (except for glass)
 - Importing the FBX to Cinema4D, use these scripts for your render engine: https://github.com/jmdvella/cinema4d-scripts
@@ -186,6 +187,7 @@ Change your own Roughness texture naming convention: line 28
 <br />
 
 ### JV_VrayToGLB.ms
+- You can watch the [youtube video](https://youtu.be/BwUq_Vws3M0) for detailed instructions.
 - Convert V-Ray Roughness Materials to Autodesk glTF materials, ready for export directly from 3dsmax 2024.
 - Automatically locates any file that has "Occlusion" and "Ambient" or "AO" in the same directory as the Diffuse texture.
 - This script will delete all your subdivision modifiers, be aware and save your files before using it.
