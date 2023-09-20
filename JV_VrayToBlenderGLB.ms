@@ -2,7 +2,7 @@
 Author: James Vella
 Website: http://www.jamesvella.net/
 Name-US: JV_VrayToBlenderGLB
-Version: 4.0
+Version: 5.0
 Software: 3D Studio Max 2021.3
 Engine: V-Ray 5.20.23
 Language: Maxscript
@@ -57,7 +57,7 @@ macroscript VrayToBlenderGLB
 		)
 		
 		-- Function to replace bitmaps
-		fn ReplaceBitmap i old_pattern replace_pattern = 
+		fn ReplaceBitmap i material_name old_pattern replace_pattern = 
 		(
 			-- Get the directory path & filename of the bitmap
 			local bitmap_dir = getFilenamePath i
@@ -83,13 +83,28 @@ macroscript VrayToBlenderGLB
 				append found_strings (getFilenameFile f)
 			)
 			
-			-- Loop through the found matching filenames and store in matching_bitmap_names array
 			local matching_bitmap_names = #()
-			for s in found_strings do
+			
+			-- Try find the bitmap based on the material name
+			try
 			(
-				if regex.IsMatch s modified_bitmap_name then
+				for val in found_strings where matchpattern val pattern:("*" + material_name + "_*") do
 				(
-					append matching_bitmap_names s
+					append matching_bitmap_names val
+				)
+			)
+			catch()
+
+			-- Otherwise Loop through the found matching filenames and store in matching_bitmap_names array
+			-- Can find multiple files if names are similar Eg. 3DC_KISB_Cabinets can match to 3DC_KISB_CabinetsIslands
+			if matching_bitmap_names.count == 0 then
+			(
+				for s in found_strings do
+				(
+					if regex.IsMatch s modified_bitmap_name then
+					(
+						append matching_bitmap_names s
+					)
 				)
 			)
 			
@@ -107,6 +122,188 @@ macroscript VrayToBlenderGLB
 			)
 		)
 		
+		-- Function to populate empty materials with bitmaps if the name material name is Glass/Liquid/Water
+		fn FindGlassTextures i newMat missingTex =
+		(
+			-- Regex to match material name from bitmaps in directory
+			
+			-- Regex to capture the first 3 groups, prefix_ + prefix_ + word 
+			local rgx_pattern = "^(\\w+?)_(\\w+?)_(\\w+?)(?:_|$)"
+			-- specific regex that finds prefix_prefix_name 
+			local regex = dotNetObject "System.Text.RegularExpressions.Regex" rgx_pattern
+			-- Find the first match in the materialName
+			local match = (regex.Match newMat.name)
+			
+			local bitmap_name_based_on_mtl = ""
+			
+			-- Check if a match was found
+			if match.Success then
+			(
+				-- bitmap named on material eg. prefix_prefix_bitmapname_basecolor
+				bitmap_name_based_on_mtl = match.Groups.Item[1].Value + "_" + match.Groups.Item[2].Value + "_" + match.Groups.Item[3].Value
+			)
+
+			-- Find first bitmap in the scene 
+			local first_bitmap_filename
+
+			for tex in getClassInstances bitmapTex target:rootnode do
+			(
+				first_bitmap_filename = tex.filename
+				exit	-- Exit the loop after the first instance is found
+			)
+			
+			-- Variables for created bitmaps			
+			local created_diffuse = undefined
+			local created_roughness = undefined
+
+			-- Create Diffuse, from first found texture in the scene					
+			if i.texmap_diffuse == undefined then
+			(
+				-- Get file directory and extension from first_bitmap_filename
+				local bitmap_dir = getFilenamePath first_bitmap_filename
+				local bitmap_ext = getFilenameType first_bitmap_filename
+				
+				try
+				(
+					-- Change the filename to match the material name
+					newMat.diffuseMap = Bitmaptexture fileName:""
+					newMat.diffuseMap.filename = bitmap_dir + (bitmap_name_based_on_mtl) + "_NotFound" + bitmap_ext
+
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					newMat.diffuseMap.filename = ReplaceBitmap (newMat.diffuseMap.filename) newMat.name "NotFound" "Base|Color|Diffuse"
+					
+					newMat.diffuseMap.name = "basecolor"
+					
+					-- create a variable to copy to roughness
+					created_diffuse = newMat.diffuseMap
+				)
+				catch
+				(
+					-- Add missing texture to missingTex array
+					append missingTex (newMat.name as string + " - Missing: Diffuse Texture. Without the Diffuse texture all" + 
+															   " other textures for this material cannot be created")
+					newMat.diffuseMap = undefined
+				)
+			)
+			
+			if created_diffuse != undefined then
+			(
+				-- Create Roughness, copy from diffuse
+				if i.texmap_reflectionGlossiness == undefined then
+				(
+					try
+					(
+						-- Copy diffuse texture
+						newMat.glossinessMap = copy created_diffuse
+
+						-- Apply Gamma 1.0 to the bitmap
+						newMat.glossinessMap.bitmap = openBitmap newMat.glossinessMap.filename gamma:1.0
+						
+						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+						newMat.glossinessMap.filename = ReplaceBitmap (newMat.glossinessMap.filename) newMat.name "Base|Color|Diffuse" "Rough"
+						
+						-- Material name
+						newMat.glossinessMap.name = "roughness"
+						
+						-- create a variable to copy to other textures
+						created_roughness = newMat.glossinessMap
+					)
+					catch
+					(
+						-- Add missing texture to missingTex array
+						append missingTex (newMat.name as string + " - Missing: Roughness Texture. Without the Roughness texture all" +
+																   " other textures for this material cannot be created")
+						newMat.glossinessMap = undefined
+					)
+				)
+			)
+			
+			if (created_diffuse != undefined and created_roughness != undefined) then
+			(
+				-- Create Metal, copy from roughness (gamma is set correctly on roughness)
+				if i.texmap_metalness == undefined then
+				(
+					try
+					(
+						-- Copy roughness texture
+						newMat.reflectionMap = copy created_roughness
+						
+						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+						newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) newMat.name "Rough" "Metal"
+						
+						-- Material name
+						newMat.reflectionMap.name = "metal"				
+					)
+					catch
+					(
+						-- Add missing texture to missingTex array
+						append missingTex (newMat.name as string + " - Missing: Metal Texture.")
+						newMat.reflectionMap = undefined
+					)
+				)
+				
+				-- Create Normal, copy from roughness (gamma is set correctly on roughness)
+				if i.texmap_bump == undefined then
+				(
+					try
+					(
+						-- Copy roughness texture
+						newMat.bumpMap = copy created_roughness
+						
+						-- if Cannot find Normal_OpenGL use anything with Normal in the filename
+						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) newMat.name "Rough" "Normal"
+						-- Material name
+						newMat.bumpMap.name = "normal"
+					)
+					catch
+					(
+						-- Add missing texture to missingTex array
+						append missingTex (newMat.name as string + " - Missing: Normal Texture.")
+						newMat.bumpMap = undefined
+					)
+				)
+				
+				-- Create Opacity, copy from roughness (gamma is set correctly on roughness)
+				if i.texmap_opacity == undefined then
+				(
+					try
+					(
+						-- Copy roughness texture
+						newMat.opacityMap = copy created_roughness
+						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+						newMat.opacityMap.filename = ReplaceBitmap (newMat.opacityMap.filename) newMat.name "Rough" "Opacity|Alpha"
+						-- Material name
+						newMat.opacityMap.name = "opacity"
+					)
+					catch
+					(
+						-- Add missing texture to missingTex array
+						append missingTex (newMat.name as string + " - Missing: Opacity Texture.")
+						newMat.opacityMap = undefined
+					)
+				)
+				
+				-- Create Occlusion, copy from roughness (gamma is set correctly on roughness)
+				try
+				(
+					-- Copy roughness texture
+					newMat.specularMap = copy created_roughness
+					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
+					newMat.specularMap.filename = ReplaceBitmap (newMat.specularMap.filename) newMat.name "Rough" "AO|Ambient|Occlusion"
+					-- Material name
+					newMat.specularMap.name = "ao"
+				)
+				catch
+				(
+					-- Add missing texture to missingTex array
+					append missingTex (newMat.name as string + " - Missing: Occlusion Texture.")
+					newMat.specularMap = undefined
+				)
+			)
+			
+			return newMat
+		)
+		
 		-- Array to collect missing textures
 		local missingTex = #()
 
@@ -119,6 +316,19 @@ macroscript VrayToBlenderGLB
 			newMat.diffuse = i.diffuse
 			newMat.bumpMapAmount = 100
 			newMat.specularLevel = 25
+			
+			-- Glass/Liquid, replace when there is no diffuse texture 
+			if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
+			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
+			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true)) and (i.texmap_diffuse == undefined) do
+			(
+				-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if your texture is named as your material name
+				-- then it will search the directory of the first found texture in the scene and locate the bitmap by using
+				-- the material name.
+				FindGlassTextures i newMat missingTex
+				-- Return without continuing the rest of the function for glass materials
+				return (i = newMat)
+			)
 
 			-- Diffuse
 			if i.texmap_diffuse != undefined then
@@ -174,7 +384,7 @@ macroscript VrayToBlenderGLB
 					-- Material name
 					newMat.reflectionMap.name = "metal"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) "Rough" "Metal"
+					newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) newMat.name "Rough" "Metal"
 				)
 				catch
 				(
@@ -201,7 +411,7 @@ macroscript VrayToBlenderGLB
 					-- Material name
 					newMat.specularMap.name = "ao"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					newMat.specularMap.filename = ReplaceBitmap (newMat.specularMap.filename) "Rough" "AO|Ambient|Occlusion"
+					newMat.specularMap.filename = ReplaceBitmap (newMat.specularMap.filename) newMat.name "Rough" "AO|Ambient|Occlusion"
 				)
 			)
 			catch
@@ -249,10 +459,10 @@ macroscript VrayToBlenderGLB
 					-- Material name
 					newMat.bumpMap.name = "normal"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
+-- 					newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
 
 					-- if Cannot find Normal_OpenGL use anything with Normal in the filename
-					newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
+					newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) newMat.name "Rough" "Normal"
 				)
 				catch
 				(
@@ -311,7 +521,7 @@ macroscript VrayToBlenderGLB
 					-- Material name
 					newMat.opacityMap.name = "opacity"
 					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					newMat.opacityMap.filename = ReplaceBitmap (newMat.opacityMap.filename) "Rough" "Alpha|Opacity"
+					newMat.opacityMap.filename = ReplaceBitmap (newMat.opacityMap.filename) newMat.name "Rough" "Alpha|Opacity"
 				)
 				catch
 				(
@@ -319,127 +529,6 @@ macroscript VrayToBlenderGLB
 					newMat.opacityMap = undefined
 				)
 			)
-			
-			-- NOTE THIS SECTION ONLY APPLIES TO MY WORKFLOW - For example if you have a material name like 3DC_LRLD_Candle  
-			-- this will work (2 prefixes).If not then if you want to use this section you need to change the rgx_pattern.
-			-- What this section does is create new textures for materials such as Glass/Liquid/Water that have no textures input.
-			/*
-			-- Glass/Liquid, not in a multi-sub and missing textures
-			if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or
-			(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or
-			(MatchPattern (i.name) pattern:"*Liquid*" ignoreCase:true)) and (i.texmap_diffuse == undefined) do
-			(
-				try
-				(
-					-- current material name (Glass/liquid etc)
-					local material_name = i.name
-					
-					-- regex pattern
-					local rgx_pattern = "^(\\w{3}_\\w{4}_\\w+)_"
-					-- specific regex that finds prefix_prefix_name 
-					local regex = dotNetObject "System.Text.RegularExpressions.Regex" rgx_pattern
-					-- Find the first match in the materialName
-					local match = (regex.Match material_name)
-					-- Check if a match was found
-					if match.Success then
-					(
-						-- bitmap named on material eg. prefix_prefix_bitmapname_basecolor
-						bitmap_name_based_on_mtl = (match.Groups.Item[1].Value)
-					)
-					
-					-- Find a bitmap in the scene
-					local find_a_bitmap = getClassInstances bitmapTex
-					if find_a_bitmap.count > 0 do
-					(
-						local first_bitmap_filename = find_a_bitmap[1].filename
-					)
-					
-					-- Create Diffuse, from first found texture in the scene					
-					if i.texmap_diffuse == undefined then
-					(
-						-- Get file directory and extension from first_bitmap_filename
-						local bitmap_dir = getFilenamePath first_bitmap_filename
-						local bitmap_ext = getFilenameType first_bitmap_filename
-						
-						-- Change the filename to match the material name
-						newMat.diffusemap = Bitmaptexture fileName:""
-						newMat.diffusemap.filename = bitmap_dir + bitmap_name_based_on_mtl + "_NotFound" + bitmap_ext
-
-						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						newMat.diffusemap.filename = ReplaceBitmap (newMat.diffusemap.filename) "NotFound" "Base|Color|Diffuse"
-						
-						newMat.diffusemap.name = "basecolor"
-					)
-					-- create a variable to copy to roughness
-					local created_diffuse = newMat.diffusemap
-					
-					-- Create Roughness, copy from diffuse
-					if i.texmap_reflectionGlossiness == undefined then
-					(
-						-- Copy diffuse texture
-						newMat.glossinessMap = copy created_diffuse
-
-						-- Apply Gamma 1.0 to the bitmap
-						newMat.glossinessMap.bitmap = openBitmap newMat.glossinessMap.filename gamma:1.0
-						
-						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						newMat.glossinessMap.filename = ReplaceBitmap (newMat.glossinessMap.filename) "Base|Color|Diffuse" "Rough"
-						
-						-- Material name
-						newMat.glossinessMap.name = "roughness"
-					)
-					-- create a variable to copy to other textures
-					local created_roughness = newMat.glossinessMap
-					
-					-- Create Metal, copy from roughness (gamma is set correctly on roughness)
-					if i.texmap_metalness == undefined then
-					(
-						-- Copy roughness texture
-						newMat.reflectionMap = copy created_roughness
-						
-						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) "Rough" "Metal"
-						
-						-- Material name
-						newMat.reflectionMap.name = "metal"
-					)
-					
-					-- Create Normal, copy from roughness (gamma is set correctly on roughness)
-					if i.texmap_bump == undefined then
-					(
-						-- Copy roughness texture
-						newMat.bumpMap = copy created_roughness
-						
-						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal_OpenGL"
-						-- if Cannot find Normal_OpenGL use anything with Normal in the filename
-						newMat.bumpMap.filename = ReplaceBitmap (newMat.bumpMap.filename) "Rough" "Normal"
-						-- Material name
-						newMat.bumpMap.name = "normal"
-					)
-					
-					-- Create Opacity, copy from roughness (gamma is set correctly on roughness)
-					if i.texmap_opacity == undefined then
-					(
-						-- Copy roughness texture
-						newMat.opacityMap = copy created_roughness
-						-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-						newMat.opacityMap.filename = ReplaceBitmap (newMat.opacityMap.filename) "Rough" "Opacity|Alpha"
-						-- Material name
-						newMat.opacityMap.name = "opacity"
-					)
-					
-					-- Create Occlusion, copy from roughness (gamma is set correctly on roughness)
-					-- Copy roughness texture
-					newMat.specularMap = copy created_roughness
-					-- ReplaceBitmap function > bitmap filename > replace from > replace with 
-					newMat.specularMap.filename = ReplaceBitmap (newMat.specularMap.filename) "Rough" "AO|Ambient|Occlusion"
-					-- Material name
-					newMat.specularMap.name = "ao"
-				)
-				catch()
-			)
-			*/
 			
 			-- Convert VrayMtl to StandardMtl
 			i = newMat
@@ -465,8 +554,7 @@ macroscript VrayToBlenderGLB
 		)
 		
 		-- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count
-		multiSubList = getClassInstances MultiMaterial target:rootnode
-		for mat in multiSubList do
+		for mat in getClassInstances MultiMaterial target:rootnode do
 		(
 			-- Variable to track the maximum bitmap count
 			max_count = 0  
@@ -496,8 +584,7 @@ macroscript VrayToBlenderGLB
 		)
 		
 		-- Search through Multi-Sub to find/replace empty Glass/Liquid materials with any other material in that Multi-Sub
-		multiSubList = getClassInstances multiSubMaterial target:rootnode
-		for i in multiSubList do
+		for i in getClassInstances multiSubMaterial target:rootnode do
 		(
 			for n = 1 to i.numsubs do
 			(
@@ -524,8 +611,7 @@ macroscript VrayToBlenderGLB
 		)
 		
 		-- Convert VRay2SidedMtl to VrayMtl
-		vrayMtlList = getClassInstances VRay2SidedMtl target:rootnode
-		for i in vrayMtlList do
+		for i in getClassInstances VRay2SidedMtl target:rootnode do
 		(
 			-- Replace VRay2SidedMtl with Front material
 			p = i.frontMtl 
@@ -533,8 +619,7 @@ macroscript VrayToBlenderGLB
 		)
 			
 		-- Convert VRayLightMtl to VrayMtl
-		vrayMtlList = getClassInstances VRayLightMtl target:rootnode
-		for i in vrayMtlList do
+		for i in getClassInstances VRayLightMtl target:rootnode do
 		(
 			-- Copy Light color to Self Illumination in VrayMtl
 			p = VRayMtl()
@@ -551,8 +636,7 @@ macroscript VrayToBlenderGLB
 		)
 
 		-- Convert VrayMtl to Standard material (This should always be last after converting other VrayMtl classes to VrayMtl)
-		vrayMtlList = getClassInstances VRayMtl target:rootnode
-		for i in vrayMtlList do
+		for i in getClassInstances VRayMtl target:rootnode do
 		(
 			p = ConvertToStdMtl i
 			if (i.name == p.name) and (i.name != undefined) do
