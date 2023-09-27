@@ -146,6 +146,12 @@ Change your own Roughness texture naming convention: line 28
 
 <br />
 
+### JV_VrayMtlSwap.ms
+- Swap textures based on Object name
+- Select the object, run the script, it renames the material as per the object name and swaps textures based on the material name
+
+<br />
+
 ### JV_VrayRoughnessToFBX.ms
 - You can watch the [youtube video](https://youtu.be/0FT6Fok-MtY) for detailed instructions.
 - Convert V-Ray Roughness Materials to FBX Standard (Legacy) Materials for exporting to FBX
