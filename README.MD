@@ -149,6 +149,7 @@ Change your own Roughness texture naming convention: line 28
 ### JV_VrayMtlSwap.ms
 - Swap textures based on Object name
 - Select the object, run the script, it renames the material as per the object name and swaps textures based on the material name
+- When using Multi-Sub materials adds suffix to each material within the multi-sub with the Multi-Sub name. Example material name is 3DC_KISC_Cabinets, Multi-Sub names are 3DC_KISC_Cabinets_Bench, 3DC_KISC_Cabinets_Cabinets.
 
 <br />
 
