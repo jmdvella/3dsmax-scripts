@@ -23,7 +23,7 @@ macroScript CreateVraySun
 		hide selection
 		unhide obj
 		
-		local exportPath = @"C:\James\Work\Personal\10_Pinball\03_Godot\assets\meshes\" + obj.name + ".glb"
+		local exportPath = @"C:\YOUR_OUTPUT_DIRECTORY\" + obj.name + ".glb"
 		
 		-- Export the isolated object to its own .glb file
 		exportFile exportPath #noPrompt selectedOnly:true using:GLTF_Export
