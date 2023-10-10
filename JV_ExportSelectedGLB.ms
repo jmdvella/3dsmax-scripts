@@ -1,11 +1,9 @@
-/*
 macroScript CreateVraySun
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Export Selected GLB"
 	buttonText:"Export Selected GLB"
 	Icon:#("Containers",15)
-*/
 (
 	/*
 	Author: James Vella
