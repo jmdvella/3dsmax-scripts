@@ -65,6 +65,12 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_ExportSelectedGLB.ms
+- Export selected objects directly to .glb, no prompts,	overwrite previous, naming based on object name.
+- You must update the file path to match your output directory otherwise it will export to the folder the 3dsmax file is saved in.
+
+<br />
+
 ### JV_ModifiersExample.ms
 - Example of how to create a modifier so that it doesnt give you fail warnings (like applying a loft to an editable polygon).
 
