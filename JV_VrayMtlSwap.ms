@@ -1,13 +1,3 @@
-/*
-Author: James Vella
-Website: http://www.jamesvella.net/
-Name-US: JV_VrayMtlSwap
-Version: 2.0
-Software: 3D Studio Max 2021.3
-Engine: V-Ray 5.20.23
-Language: Maxscript
-Description-US: Swap materials based on Object name
-*/
 
 macroscript VrayMtlSwap
 	category:"Vella" 
@@ -17,6 +7,16 @@ macroscript VrayMtlSwap
 	Icon:#("StateSets",1)
 
 (
+	/*
+	Author: James Vella
+	Website: http://www.jamesvella.net/
+	Name-US: JV_VrayMtlSwap
+	Version: 2.1
+	Software: 3D Studio Max 2021.3
+	Engine: V-Ray 5.20.23
+	Language: Maxscript
+	Description-US: Swap materials based on Object name
+	*/
 	undo on
 	
 	with animate off 
@@ -117,19 +117,23 @@ macroscript VrayMtlSwap
 			-- Normal
 			if newMat.texmap_bump != undefined then
 			(
-				if newMat.texmap_bump.normal_map != undefined then
+				try
 				(
-					try
+					if newMat.texmap_bump.normal_map != undefined then
 					(
-						newMat.texmap_bump.normal_map.filename = ReplaceBitmap (newMat.texmap_bump.normal_map.filename) replace_name "Normal_DirectX"
-					)
-					catch
-					(
-						-- if texture not found, remove it from the material
-						newMat.texmap_bump = undefined
-						newMat.texmap_bump_on = off
+						try
+						(
+							newMat.texmap_bump.normal_map.filename = ReplaceBitmap (newMat.texmap_bump.normal_map.filename) replace_name "Normal_DirectX"
+						)
+						catch
+						(
+							-- if texture not found, remove it from the material
+							newMat.texmap_bump = undefined
+							newMat.texmap_bump_on = off
+						)
 					)
 				)
+				catch()
 			)
 			
 			-- Metal
