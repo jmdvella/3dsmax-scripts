@@ -1,13 +1,3 @@
-/*
-Author: James Vella
-Website: http://www.jamesvella.net/
-Name-US: JV_VrayToGLB
-Version: 4.0
-Software: 3D Studio Max 2024.1
-Engine: V-Ray 6.10.08
-Language: Maxscript
-Description-US: Convert Vray Roughness materials to GLTF material
-*/
 
 macroscript VrayToGLB
 	category:"Vella" 
@@ -15,7 +5,19 @@ macroscript VrayToGLB
 	tooltip:"Automate VrayToGLB"
 	buttonText:"Vray To GLB"
 	Icon:#("Containers",6)
+
 (
+	/*
+	Author: James Vella
+	Website: http://www.jamesvella.net/
+	Name-US: JV_VrayToGLB
+	Version: 4.1
+	Software: 3D Studio Max 2024.1
+	Engine: V-Ray 6.10.08
+	Language: Maxscript
+	Description-US: Convert Vray Roughness materials to GLTF material
+	*/
+	
 	undo on
 		
 	with animate off 
@@ -389,16 +391,16 @@ macroscript VrayToGLB
 			)
 			
 			-- Occlusion
-			try
+			if i.texmap_reflectionGlossiness != undefined then
 			(
-				if i.texmap_reflectionGlossiness != undefined then
+				-- Copy roughness texture and search for bitmap in directory
+				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
 				(
-					-- Copy roughness texture and search for bitmap in directory
-					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do 
-					(
-						-- Copy roughness texture
-						newMat.ambientOcclusionMap = copy found_bitmap
-					)
+					-- Copy roughness texture
+					newMat.ambientOcclusionMap = copy found_bitmap
+				)
+				try
+				(
 					-- Material name
 					newMat.ambientOcclusionMap.name = "ao"
 					-- Replace with matching new name - (?i). is regex pattern for ignorecase
@@ -410,20 +412,19 @@ macroscript VrayToGLB
 						newMat.ambientOcclusionMap.coords.mapChannel = 2
 						newMat.DoubleSided = on		-- Enable Double Sided for Plant Leaves
 					)
-					
 				)
-			)
-			catch
-			(	
-				-- If Occlusion texture not found then remove the filename and flag as missing
-				newMat.ambientOcclusionMap.filename = ""
-				
-				-- Add missing texture to missingTex array
-				if newMat.ambientOcclusionMap.filename == "" then
+				catch
 				(
+					-- Remove texture if it doesnt find _ao in the name 
+					newMat.ambientOcclusionMap = undefined
 					-- Add missing texture to missingTex array
 					append missingTex (newMat.name as string + " - Missing: Occlusion Texture")
 				)
+			)
+			else
+			(
+				-- Add missing texture to missingTex array
+				append missingTex (newMat.name as string + " - Missing: Occlusion Texture")
 			)
 
 			-- Normal
@@ -545,7 +546,9 @@ macroscript VrayToGLB
 				)
 			)
 		)
+		
 		/*
+		
 		-- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count
 		for mat in getClassInstances MultiMaterial target:rootnode do
 		(
@@ -602,7 +605,9 @@ macroscript VrayToGLB
 				)
 			)
 		)
+		
 		*/
+		
 		-- Convert VRay2SidedMtl to VrayMtl
 		for i in getClassInstances VRay2SidedMtl target:rootnode do
 		(
