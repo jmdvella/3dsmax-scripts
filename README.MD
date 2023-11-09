@@ -174,6 +174,7 @@ Change your own Roughness texture naming convention: line 28
   - Specular level for Blender 0.5
   - Reflection to White
 ##### Textures
+  - VrayBitmap to Standard Bitmap (texture only, not values)
   - Diffuse, Diffuse Color & VrayColor in Diffuse
   - Roughness 
   - Metal 
@@ -197,6 +198,7 @@ Change your own Roughness texture naming convention: line 28
 - This script also assumes you have set up your glass/liquid materials correctly for GLB (working correctly in Substance Painter for example). This means your AO, Opacity and Diffuse textures support opacity in realtime. 
 - Install the [jv_convert_to_glb.py](https://github.com/jmdvella/blender-scripts/blob/main/jv_convert_to_glb.py) for blender and follow the install instructions [here](https://github.com/jmdvella/blender-scripts)
 - Import the FBX to Blender and run the jv_convert_to_glb.py script
+- Converts VrayBitmap to Standard bitmap (texture only, not values)
 
 <br />
 
