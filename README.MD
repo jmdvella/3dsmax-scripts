@@ -181,6 +181,7 @@ Change your own Roughness texture naming convention: line 28
   - Opacity 
   - Normal & Bump
   - Self Illumination Color & Texture
+  - Can convert .tx to .jpg or .png. These files must be in the same location as the .tx file (as per v3.2)
 #### Scripting Note: 
 - Change/Add your own material settings in Function: fn convert_to_stdmtl i =    
 - Change your own Normal texture naming convention by replacing the suffix "DirectX" and "OpenGL": i.texmap_bump.normal_map.filename = substituteString i.texmap_bump.normal_map.filename "DirectX" "OpenGL"
