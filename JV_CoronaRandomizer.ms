@@ -11,7 +11,7 @@ macroscript CoronaRandomizer
 	Author: James Vella
 	Website: http://www.jamesvella.net
 	Name-US: JV_CoronaRandomizer
-	Version: 3.1
+	Version: 3.2
 	Software: 3D Studio Max 2024.1
 	Engine: Corona 10.0
 	Language: Maxscript
@@ -25,7 +25,7 @@ macroscript CoronaRandomizer
 		function addRandomizer obj crandomizer  =
 		(
 			-- Apply CoronaMappingRandomizer node and re-wire all inputs/outputs --
-
+			
 			-- Find all used inputs in the material (diffuse/gloss/etc)
             for i in 1 to obj.material.numsubs do
             (
@@ -132,7 +132,7 @@ macroscript CoronaRandomizer
 
 			group "Information" 
 			(
-				label lbl_ver "Version 3.0" align:#left across:2
+				label lbl_ver "Version 3.2" align:#left across:2
 				HyperLink hyp_tutorial "Contact" align:#right color:(color 0 255 255) hovercolor:(color 0 150 150) visitedcolor:(color 0 200 200) address:"mailto:jmdvella@gmail.com" 
 			)
 			group "Instructions"
@@ -151,7 +151,7 @@ macroscript CoronaRandomizer
 			-- Functions and Buttons for rollout
 			on btn_both pressed do  
 			(
-				theHold.Begin() -- undo on
+				undo on
 				for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
 											isKindOf obj.material CoronaLegacyMtl) do
 				(
@@ -162,12 +162,11 @@ macroscript CoronaRandomizer
 					local ctriplanar = CoronaTriplanar()
 					addTriplanar obj ctriplanar 
 				)
-				theHold.Accept "Undo Randomizer" -- undo off
 			)
 
 			on btn_cmapping pressed do  
 			(
-				theHold.Begin() -- undo on
+				undo on
 				for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
 											isKindOf obj.material CoronaLegacyMtl) do
 				(
@@ -175,12 +174,11 @@ macroscript CoronaRandomizer
 					local crandomizer = copy crandomizer_custom
 					addRandomizer obj crandomizer
 				)
-				theHold.Accept "Undo Randomizer" -- undo off
 			)
 
 			on btn_ctriplanar pressed do  
 			(
-				theHold.Begin() -- undo on
+				undo on
 				for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
 											isKindOf obj.material CoronaLegacyMtl) do
 				(
@@ -188,7 +186,6 @@ macroscript CoronaRandomizer
 					local ctriplanar = CoronaTriplanar()
 					addTriplanar obj ctriplanar 
 				)
-				theHold.Accept "Undo Triplanar" -- undo off
 			)
 		)
 
