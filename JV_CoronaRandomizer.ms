@@ -11,7 +11,7 @@ macroscript CoronaRandomizer
 	Author: James Vella
 	Website: http://www.jamesvella.net
 	Name-US: JV_CoronaRandomizer
-	Version: 3.0
+	Version: 3.1
 	Software: 3D Studio Max 2024.1
 	Engine: Corona 10.0
 	Language: Maxscript
@@ -156,7 +156,7 @@ macroscript CoronaRandomizer
 											isKindOf obj.material CoronaLegacyMtl) do
 				(
 					-- CoronaMappingRandomizer
-					local crandomizer = crandomizer_custom
+					local crandomizer = copy crandomizer_custom
 					addRandomizer obj crandomizer
 					-- CoronaTriplanar
 					local ctriplanar = CoronaTriplanar()
@@ -172,7 +172,7 @@ macroscript CoronaRandomizer
 											isKindOf obj.material CoronaLegacyMtl) do
 				(
 					-- CoronaMappingRandomizer
-					local crandomizer = crandomizer_custom
+					local crandomizer = copy crandomizer_custom
 					addRandomizer obj crandomizer
 				)
 				theHold.Accept "Undo Randomizer" -- undo off
