@@ -15,7 +15,7 @@ macroscript CoronaRandomizer
 	Software: 3D Studio Max 2024.1
 	Engine: Corona 10.0
 	Language: Maxscript
-	Description-US: Add Corona Mapping Randomizer to all bitmaps in selected objects 
+	Description-US: Add CoronaMappingRandomizer and/or CoronaTriplanar to all bitmaps in selected objects 
 	*/ 
 
 	-- undo on 
