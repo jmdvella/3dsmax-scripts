@@ -22,6 +22,14 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CoronaRandomizer.ms
+- Add either CoronaMappingRandomizer, CoronaTriplanar or both at the same time
+- Select all the objects with Corona Physical or Corona Legacy materials and apply the script. Supports more than 1 selected object
+- If you have no objects selected then it will apply to the current selected material. Does not support more than 1 selected material
+- Additional options available for saving your default options such as: Stochastic Mapping & High Quality Blending. Read the tooltip(s) for more information
+
+<br />
+
 ### JV_CoronaToPhysical.ms
 - Convert Corona Physical to Autodesk Physical materials
 #### Notes:
