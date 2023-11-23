@@ -11,25 +11,21 @@ macroscript CoronaRandomizer
 	Author: James Vella
 	Website: http://www.jamesvella.net
 	Name-US: JV_CoronaRandomizer
-	Version: 3.2
+	Version: 3.3
 	Software: 3D Studio Max 2024.1
 	Engine: Corona 10.0
 	Language: Maxscript
 	Description-US: Add CoronaMappingRandomizer and/or CoronaTriplanar to all bitmaps in selected objects 
 	*/ 
 
-	-- undo on 
-
 	with animate off  
 	(
-		function addRandomizer obj crandomizer  =
-		(
-			-- Apply CoronaMappingRandomizer node and re-wire all inputs/outputs --
-			
+		function addRandomizer selected_material crandomizer  =
+		(		
 			-- Find all used inputs in the material (diffuse/gloss/etc)
-            for i in 1 to obj.material.numsubs do
+            for i in 1 to selected_material.numsubs do
             (
-                local tex = getSubAnim obj.material i
+                local tex = getSubAnim selected_material i
 				
 				-- Only add CoronaMappingRandomizer material nodes that are used by a bitmap or node group
 				if (tex != undefined) and (tex[1] != undefined) do
@@ -86,14 +82,14 @@ macroscript CoronaRandomizer
 			ForceCompleteRedraw()
 		)
 		
-		function addTriplanar obj ctriplanar = 
+		function addTriplanar selected_material ctriplanar = 
 		(
 			-- Apply CoronaTriplanar node and re-wire all inputs/outputs --
 
 			-- Find all used inputs in the material (diffuse/gloss/etc)
-            for i in 1 to obj.material.numsubs do
+            for i in 1 to selected_material.numsubs do
             (
-                local tex = getSubAnim obj.material i
+                local tex = getSubAnim selected_material i
 				
 				-- Only add CoronaMappingRandomizer material nodes that are used by a bitmap or node group
 				if (tex != undefined) and (tex[1] != undefined) do
@@ -125,21 +121,23 @@ macroscript CoronaRandomizer
 
 		-- Variables for Rollout
 		local crandomizer_custom = CoronaMappingRandomizer()
-
+		local ctriplanar_custom = CoronaTriplanar()
+		
 		rollout randomizer_rl "Main Menu" category:1 
 		(
 			-- Main UI Rollout --
 
 			group "Information" 
 			(
-				label lbl_ver "Version 3.2" align:#left across:2
+				label lbl_ver "Version 3.3" align:#left across:2
 				HyperLink hyp_tutorial "Contact" align:#right color:(color 0 255 255) hovercolor:(color 0 150 150) visitedcolor:(color 0 200 200) address:"mailto:jmdvella@gmail.com" 
 			)
 			group "Instructions"
 			(
-				label lbl_0 "1. Select the objects first." align:#left
-				label lbl_1 "2. Choose your randomizer." align:#left
-				label lbl_2 "3. Undo available if required." align:#left
+				label lbl_0 "1. Select the objects first" align:#left
+				label lbl_1 "2. If no objects selected then select a material" align:#left
+				label lbl_2 "3. Choose your randomizer(s)" align:#left
+				label lbl_3 "4. Undo available if required" align:#left
 			)
 			group "Actions"  
 			(
@@ -152,39 +150,100 @@ macroscript CoronaRandomizer
 			on btn_both pressed do  
 			(
 				undo on
-				for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
-											isKindOf obj.material CoronaLegacyMtl) do
 				(
-					-- CoronaMappingRandomizer
-					local crandomizer = copy crandomizer_custom
-					addRandomizer obj crandomizer
-					-- CoronaTriplanar
-					local ctriplanar = CoronaTriplanar()
-					addTriplanar obj ctriplanar 
+					-- Material is selected, not the object
+					if selection.count == 0 then
+					(
+						local selected_material = SME.GetMtlinParamEditor()
+						-- Process the selected material
+						if (isKindOf selected_material CoronaPhysicalMtl or 
+							isKindOf selected_material CoronaLegacyMtl) do
+						(
+							-- CoronaMappingRandomizer
+							local crandomizer = copy crandomizer_custom
+							addRandomizer selected_material crandomizer
+							-- CoronaTriplanar
+							local ctriplanar = copy ctriplanar_custom
+							addTriplanar selected_material ctriplanar
+
+						)	
+					)
+					-- Object is selected, not material
+					else
+					(
+						for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
+							isKindOf obj.material CoronaLegacyMtl) do
+						(
+							-- CoronaMappingRandomizer
+							local crandomizer = copy crandomizer_custom
+							addRandomizer obj.material crandomizer
+							-- CoronaTriplanar
+							local ctriplanar = copy ctriplanar_custom
+							addTriplanar obj.material ctriplanar 
+						)	
+					)
 				)
 			)
 
 			on btn_cmapping pressed do  
 			(
 				undo on
-				for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
-											isKindOf obj.material CoronaLegacyMtl) do
 				(
-					-- CoronaMappingRandomizer
-					local crandomizer = copy crandomizer_custom
-					addRandomizer obj crandomizer
+					-- Material is selected, not the object
+					if selection.count == 0 then
+					(
+						local selected_material = SME.GetMtlinParamEditor()
+						-- Process the selected material
+						if (isKindOf selected_material CoronaPhysicalMtl or 
+							isKindOf selected_material CoronaLegacyMtl) do
+						(
+							-- CoronaMappingRandomizer
+							local crandomizer = copy crandomizer_custom
+							addRandomizer selected_material crandomizer
+						)
+					)
+					-- Object is selected, not material
+					else
+					(
+						-- Process the selected object
+						for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
+													isKindOf obj.material CoronaLegacyMtl) do
+						(
+							-- CoronaMappingRandomizer
+							local crandomizer = copy crandomizer_custom
+							addRandomizer obj.material crandomizer
+						)
+					)
 				)
 			)
 
 			on btn_ctriplanar pressed do  
 			(
 				undo on
-				for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
-											isKindOf obj.material CoronaLegacyMtl) do
 				(
-					-- CoronaTriplanar
-					local ctriplanar = CoronaTriplanar()
-					addTriplanar obj ctriplanar 
+					-- Material is selected, not the object
+					if selection.count == 0 then
+					(
+						local selected_material = SME.GetMtlinParamEditor()
+						-- Process the selected material
+						if (isKindOf selected_material CoronaPhysicalMtl or 
+							isKindOf selected_material CoronaLegacyMtl) do
+						(
+							-- CoronaTriplanar
+							local ctriplanar = copy ctriplanar_custom
+							addTriplanar selected_material ctriplanar
+						)
+					)
+					else
+					(
+						for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
+													isKindOf obj.material CoronaLegacyMtl) do
+						(
+							-- CoronaTriplanar
+							local ctriplanar = copy ctriplanar_custom
+							addTriplanar obj.material ctriplanar 
+						)
+					)
 				)
 			)
 		)
@@ -194,14 +253,14 @@ macroscript CoronaRandomizer
 			-- UI for Randomizer Settings
 			group "Offset and Tiling"
 			(
-				checkbox chk_stochastic "Stochastic" align:#left across:2 tooltip:("U|X, V|Y, W|Z Offset and Rotation + Randomize Each Tile")
-				checkbox chk_hqblending "HQ Blending" checked:true tooltip:("Tiling: High quality blending") 
+				checkbox chk_stochastic "Stochastic Mapping" align:#left across:2 tooltip:("U|X: -1.0 to 1.0\nV|Y: -1.0 to 1.0\nW|Z: 0 to 360\nRandomize each tile (on)")
+				checkbox chk_hqblending "High Quality Blending" align:#right checked:true tooltip:("Tiling: High quality blending") 
 			)
 
 			group "Save Settings"
 			(
-				button btn_save "Save as Default" across:2 tooltip:("Save current CoronaMappingRandomizer settings as Default")
-				button btn_reset "Reset all Settings" tooltip:("Return to Default CoronaMappingRandomizer settings")
+				button btn_save "Save as Default" across:2 tooltip:("Save current CoronaMappingRandomizer settings as Default Settings for this script.")
+				button btn_reset "Reset all Settings" tooltip:("Return to Default CoronaMappingRandomizer settings as Default Settings for this script")
 			)
 
 			-- Settings for checkboxes
@@ -260,6 +319,9 @@ macroscript CoronaRandomizer
 			-- Check for current settings, if exist use those
 			on settings_rand_rl open do
 			(
+				-- local selected_material = SME.GetMtlinParamEditor()
+				-- print selection.count 
+
 				local saved_settings = getDir(#userScripts) + "\\Vella\\CoronaRandomizer_Settings.txt"
 				if doesFileExist saved_settings then  
 				(  
@@ -267,16 +329,16 @@ macroscript CoronaRandomizer
 					while not eof file_stream do  
 					(  
 						-- Read randomizer settings from text file
-						crandomizer_custom.offset_U_from =					readValue file_stream
-						crandomizer_custom.offset_U_to =					readValue file_stream
-						crandomizer_custom.offset_V_from =					readValue file_stream
-						crandomizer_custom.offset_V_to =					readValue file_stream
-						crandomizer_custom.rotation_W_to =					readValue file_stream
-						crandomizer_custom.tiling_stochastic =				readValue file_stream
-						crandomizer_custom.tiling_high_quality_blending = 	readValue file_stream 
+						crandomizer_custom.offset_U_from 					= readValue file_stream
+						crandomizer_custom.offset_U_to						= readValue file_stream
+						crandomizer_custom.offset_V_from 					= readValue file_stream
+						crandomizer_custom.offset_V_to 						= readValue file_stream
+						crandomizer_custom.rotation_W_to 					= readValue file_stream
+						crandomizer_custom.tiling_stochastic 				= readValue file_stream
+						crandomizer_custom.tiling_high_quality_blending 	= readValue file_stream 
 						-- Read checkbox states from text file and update checkboxes
-						chk_stochastic.state = (readValue file_stream) == 1
-						chk_hqblending.state = (readValue file_stream) == 1
+						chk_stochastic.state 								= (readValue file_stream) == 1
+						chk_hqblending.state 								= (readValue file_stream) == 1
 					)
 					-- Close the text file  
 					close file_stream
@@ -294,7 +356,7 @@ macroscript CoronaRandomizer
 			checkbox chk_instance "Instance"
 		)
 
-		rf = newRolloutFloater "Corona Randomizer" 280 400 
+		rf = newRolloutFloater "Corona Randomizer" 280 410 
 		addRollout randomizer_rl rf 
 		addRollout settings_rand_rl rf --rolledUp:true
 		-- addRollout settings_tri_rl rf --rolledUp:true
