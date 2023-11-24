@@ -1,15 +1,17 @@
+
 macroscript VrayToFBX
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Automate VrayToFBX"
 	buttonText:"Vray To FBX"
 	Icon:#("SchematicView",2)
+
 (  
 	/*
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayRoughnessToFBX
-	Version: 3.2
+	Version: 3.3
 	Software: 3D Studio Max 2021.3
 	Engine: V-Ray 5.20.23
 	Language: Maxscript
@@ -307,14 +309,18 @@ macroscript VrayToFBX
 		)  
 		 
 		-- Find and collect TX Bitmaps        
-		local found_tx_bitmaps = #()  
-		for i in getClassInstances VRayBitmap target:rootnode do  
+		local found_tx_bitmaps = #()
+		try
 		(  
-			if MatchPattern i.filename pattern:"*.tx" then  
+			for i in getClassInstances VRayBitmap target:rootnode do  
 			(  
-				append found_tx_bitmaps i  
+				if MatchPattern i.filename pattern:"*.tx" then  
+				(  
+					append found_tx_bitmaps i  
+				)  
 			)  
-		)  
+		)
+		catch(/*User does not have Vray that supports VrayBitmap*/)
 
 		-- Convert TX Bitmaps to jpg/png        
 		if found_tx_bitmaps.count > 0 then  
