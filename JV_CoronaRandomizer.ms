@@ -11,7 +11,7 @@ macroscript CoronaRandomizer
 	Author: James Vella
 	Website: http://www.jamesvella.net
 	Name-US: JV_CoronaRandomizer
-	Version: 3.3
+	Version: 3.4
 	Software: 3D Studio Max 2024.1
 	Engine: Corona 10.0
 	Language: Maxscript
@@ -119,9 +119,37 @@ macroscript CoronaRandomizer
 			)
 		)
 
+		function addSelectedMaterials =
+		(
+			-- Returns selected materials from slate editor as array --
+			-- Thanks to Frood from the Corona Forums for this function
+
+			local selected_materials = #()
+			if (sme.getview sme.activeView) != undefined then 
+			(
+				selected_nodes = (sme.getview sme.activeView).GetSelectedNodes()
+				if selected_nodes.count != 0 then 
+				(
+					for node in selected_nodes do 
+					(
+						if (superclassof node.reference == material) then 
+						(
+							append selected_materials node.reference
+						)
+					)
+					return selected_materials
+				)
+			)
+			else
+			(
+				return undefined
+			)
+		)
+
 		-- Variables for Rollout
 		local crandomizer_custom = CoronaMappingRandomizer()
 		local ctriplanar_custom = CoronaTriplanar()
+		local all_selected_materials = undefined
 		
 		rollout randomizer_rl "Main Menu" category:1 
 		(
@@ -129,13 +157,13 @@ macroscript CoronaRandomizer
 
 			group "Information" 
 			(
-				label lbl_ver "Version 3.3" align:#left across:2
+				label lbl_ver "Version 3.4" align:#left across:2
 				HyperLink hyp_tutorial "Contact" align:#right color:(color 0 255 255) hovercolor:(color 0 150 150) visitedcolor:(color 0 200 200) address:"mailto:jmdvella@gmail.com" 
 			)
 			group "Instructions"
 			(
 				label lbl_0 "1. Select the objects first" align:#left
-				label lbl_1 "2. If no objects selected then select a material" align:#left
+				label lbl_1 "2. If no objects selected then select material(s)" align:#left
 				label lbl_2 "3. Choose your randomizer(s)" align:#left
 				label lbl_3 "4. Undo available if required" align:#left
 			)
@@ -154,25 +182,30 @@ macroscript CoronaRandomizer
 					-- Material is selected, not the object
 					if selection.count == 0 then
 					(
-						local selected_material = SME.GetMtlinParamEditor()
-						-- Process the selected material
-						if (isKindOf selected_material CoronaPhysicalMtl or 
-							isKindOf selected_material CoronaLegacyMtl) do
+						all_selected_materials = addSelectedMaterials()
+						if all_selected_materials != undefined then
 						(
-							-- CoronaMappingRandomizer
-							local crandomizer = copy crandomizer_custom
-							addRandomizer selected_material crandomizer
-							-- CoronaTriplanar
-							local ctriplanar = copy ctriplanar_custom
-							addTriplanar selected_material ctriplanar
+							for selected_material in all_selected_materials do
+							(
+								if (isKindOf selected_material CoronaPhysicalMtl or 
+									isKindOf selected_material CoronaLegacyMtl) do
+								(
+									-- CoronaMappingRandomizer
+									local crandomizer = copy crandomizer_custom
+									addRandomizer selected_material crandomizer
+									-- CoronaTriplanar
+									local ctriplanar = copy ctriplanar_custom
+									addTriplanar selected_material ctriplanar
 
+								)
+							)
 						)	
 					)
 					-- Object is selected, not material
 					else
 					(
 						for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
-							isKindOf obj.material CoronaLegacyMtl) do
+													isKindOf obj.material CoronaLegacyMtl) do
 						(
 							-- CoronaMappingRandomizer
 							local crandomizer = copy crandomizer_custom
@@ -187,19 +220,26 @@ macroscript CoronaRandomizer
 
 			on btn_cmapping pressed do  
 			(
+				-- all_selected_materials = addSelectedMaterials()
 				undo on
 				(
 					-- Material is selected, not the object
 					if selection.count == 0 then
 					(
-						local selected_material = SME.GetMtlinParamEditor()
-						-- Process the selected material
-						if (isKindOf selected_material CoronaPhysicalMtl or 
-							isKindOf selected_material CoronaLegacyMtl) do
+						all_selected_materials = addSelectedMaterials()
+						if all_selected_materials != undefined then
 						(
-							-- CoronaMappingRandomizer
-							local crandomizer = copy crandomizer_custom
-							addRandomizer selected_material crandomizer
+							for selected_material in all_selected_materials do
+							(
+								-- Process the selected material
+								if (isKindOf selected_material CoronaPhysicalMtl or 
+									isKindOf selected_material CoronaLegacyMtl) do
+								(
+									-- CoronaMappingRandomizer
+									local crandomizer = copy crandomizer_custom
+									addRandomizer selected_material crandomizer
+								)
+							)
 						)
 					)
 					-- Object is selected, not material
@@ -215,6 +255,7 @@ macroscript CoronaRandomizer
 						)
 					)
 				)
+				
 			)
 
 			on btn_ctriplanar pressed do  
@@ -224,16 +265,23 @@ macroscript CoronaRandomizer
 					-- Material is selected, not the object
 					if selection.count == 0 then
 					(
-						local selected_material = SME.GetMtlinParamEditor()
-						-- Process the selected material
-						if (isKindOf selected_material CoronaPhysicalMtl or 
-							isKindOf selected_material CoronaLegacyMtl) do
+						all_selected_materials = addSelectedMaterials()
+						if all_selected_materials != undefined then
 						(
-							-- CoronaTriplanar
-							local ctriplanar = copy ctriplanar_custom
-							addTriplanar selected_material ctriplanar
+							for selected_material in all_selected_materials do
+							(
+								-- Process the selected material
+								if (isKindOf selected_material CoronaPhysicalMtl or 
+									isKindOf selected_material CoronaLegacyMtl) do
+								(
+									-- CoronaTriplanar
+									local ctriplanar = copy ctriplanar_custom
+									addTriplanar selected_material ctriplanar
+								)
+							)
 						)
 					)
+					-- Object is selected, not material
 					else
 					(
 						for obj in selection where (isKindOf obj.material CoronaPhysicalMtl or 
@@ -319,8 +367,10 @@ macroscript CoronaRandomizer
 			-- Check for current settings, if exist use those
 			on settings_rand_rl open do
 			(
-				-- local selected_material = SME.GetMtlinParamEditor()
-				-- print selection.count 
+				-- local test = addSelectedMaterials()
+				-- print test
+				-- print (classof test)
+				print all_selected_materials
 
 				local saved_settings = getDir(#userScripts) + "\\Vella\\CoronaRandomizer_Settings.txt"
 				if doesFileExist saved_settings then  
