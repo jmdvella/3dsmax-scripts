@@ -11,7 +11,7 @@ macroscript VrayToFBX
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayRoughnessToFBX
-	Version: 3.3
+	Version: 3.5
 	Software: 3D Studio Max 2021.3
 	Engine: V-Ray 5.20.23
 	Language: Maxscript
@@ -163,54 +163,64 @@ macroscript VrayToFBX
 			)  
 			 
 			-- Replace Metal texture       
-			if i.texmap_metalness != undefined then  
-			(  
-				-- look for bitmap in sub-nodes such as falloff/color-correct etc.       
-				for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_metalness) do  
+			try
+			(
+				if i.texmap_metalness != undefined then  
 				(  
-					newMat.reflectionMap = found_bitmap  
+					-- look for bitmap in sub-nodes such as falloff/color-correct etc.       
+					for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_metalness) do  
+					(  
+						newMat.reflectionMap = found_bitmap  
+					)  
+					-- Set Coordinates to Texture instead of Environment       
+					newMat.reflectionMap.coords.mappingType = 0  
 				)  
-				-- Set Coordinates to Texture instead of Environment       
-				newMat.reflectionMap.coords.mappingType = 0  
-			)  
-			else  
-			(  
+				else  
+				(  
+					-- Disable Metal in Standard Material       
+					newMat.reflectionMapEnable = on  
+					newMat.reflectionMapAmount = 0  
+				)  
+				
+				-- Convert Metal numeric value to Reflection value       
+				if i.reflection_metalness != 0 then  
+				(  
+					-- Try find metal texture in the directory       
+					try  
+					(  
+						-- Copy roughness bitmap and change name to Metal       
+						if i.texmap_reflectionGlossiness != undefined then  
+						(  
+							-- look for bitmap in sub-nodes such as falloff/color-correct etc.       
+							for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do  
+							(  
+								newMat.reflectionMap = copy found_bitmap  
+							)  
+							
+							newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) newMat.name "Rough" "Metal"  
+							newMat.reflectionMap.name = "metal"  
+							newMat.reflectionMapAmount = 100  
+						)  
+					)  
+					catch  
+					(  
+						-- Add missing texture to missingTex array       
+						append missingTex (newMat.name as string + " - Missing: Metal Texture")  
+						newMat.reflectionMap = undefined  
+					)  
+				)  
+				else  
+				(  
+					newMat.reflectionMapAmount = (i.reflection_metalness * 100)  
+				)  
+			)
+			catch
+			(
+				/*User does not have Vray 5*/
 				-- Disable Metal in Standard Material       
 				newMat.reflectionMapEnable = on  
 				newMat.reflectionMapAmount = 0  
-			)  
-			 
-			-- Convert Metal numeric value to Reflection value       
-			if i.reflection_metalness != 0 then  
-			(  
-				-- Try find metal texture in the directory       
-				try  
-				(  
-					-- Copy roughness bitmap and change name to Metal       
-					if i.texmap_reflectionGlossiness != undefined then  
-					(  
-						-- look for bitmap in sub-nodes such as falloff/color-correct etc.       
-						for found_bitmap in (getClassInstances Bitmaptexture target:i.texmap_reflectionGlossiness) do  
-						(  
-							newMat.reflectionMap = copy found_bitmap  
-						)  
-						 
-						newMat.reflectionMap.filename = ReplaceBitmap (newMat.reflectionMap.filename) newMat.name "Rough" "Metal"  
-						newMat.reflectionMap.name = "metal"  
-						newMat.reflectionMapAmount = 100  
-					)  
-				)  
-				catch  
-				(  
-					-- Add missing texture to missingTex array       
-					append missingTex (newMat.name as string + " - Missing: Metal Texture")  
-					newMat.reflectionMap = undefined  
-				)  
-			)  
-			else  
-			(  
-				newMat.reflectionMapAmount = (i.reflection_metalness * 100)  
-			)  
+			)
 			 
 			-- Replace Opacity       
 			if i.texmap_opacity != undefined then  
@@ -320,7 +330,10 @@ macroscript VrayToFBX
 				)  
 			)  
 		)
-		catch(/*User does not have Vray that supports VrayBitmap*/)
+		catch
+		(
+			/*User does not have Vray 5*/
+		)
 
 		-- Convert TX Bitmaps to jpg/png        
 		if found_tx_bitmaps.count > 0 then  
