@@ -23,6 +23,7 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 <br />
 
 ### JV_CoronaRandomizer.ms
+- You can watch the [youtube video](https://youtu.be/MEQ_Jbbobgs) for detailed instructions.
 - Add either CoronaMappingRandomizer, CoronaTriplanar or both at the same time
 - Select all the objects with Corona Physical or Corona Legacy materials and apply the script. 
 - If you have no objects selected then it will apply to the current selected materials.
