@@ -11,7 +11,7 @@ macroscript VrayToFBX
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayRoughnessToFBX
-	Version: 3.5
+	Version: 3.6
 	Software: 3D Studio Max 2021.3
 	Engine: V-Ray 5.20.23
 	Language: Maxscript
