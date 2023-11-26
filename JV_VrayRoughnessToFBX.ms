@@ -179,7 +179,9 @@ macroscript VrayToFBX
 				(  
 					-- Disable Metal in Standard Material       
 					newMat.reflectionMapEnable = on  
-					newMat.reflectionMapAmount = 0  
+					newMat.reflectionMapAmount = 0
+					-- Add missing texture to missingTex array  
+					append missingTex (newMat.name as string + " - Missing: Metal Texture")    
 				)  
 				
 				-- Convert Metal numeric value to Reflection value       
@@ -204,8 +206,6 @@ macroscript VrayToFBX
 					)  
 					catch  
 					(  
-						-- Add missing texture to missingTex array       
-						append missingTex (newMat.name as string + " - Missing: Metal Texture")  
 						newMat.reflectionMap = undefined  
 					)  
 				)  
