@@ -1,11 +1,9 @@
-
 macroscript CoronaRandomizer
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Automate CoronaRandomizer"
 	buttonText:"Corona Randomizer"
 	Icon:#("UVWUnwrapTools",41)
-
 (  
 	/*
 	Author: James Vella
@@ -16,6 +14,11 @@ macroscript CoronaRandomizer
 	Engine: Corona 10.0
 	Language: Maxscript
 	Description-US: Add CoronaMappingRandomizer and/or CoronaTriplanar to all bitmaps in selected objects 
+					If no objects are selected in viewport then it will apply to selected materials in the
+					slate Editor. Can also apply Color Correct for Diffuse and/or Diffuse + Translucency
+					for selected materials. This works different to the CoronaMappingRandomizer & CoronaTriplanar
+					as it puts all selected materials Diffuse into one ColorCorrect for changing multiple Diffuse
+					colors for all selected materials at once. 
 	*/	 
 
 	with animate off  
