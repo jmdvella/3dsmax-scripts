@@ -234,8 +234,6 @@ macroscript CoronaRandomizer
 								if input_count == undefined then input_count = (diffuse_ccorrect.additionalOutputs)  
 								ccorrect.additionalOutputs = input_count  
 								local new_output = MultiOutputChannelTexmapToTexmap()  -- create for additional outputs  
-								-- new_output.outputChannelIndex = (current_count)  
-								-- COME BACK HERE  
 								 
 								for j = 1 to input_count do  
 								(  
