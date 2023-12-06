@@ -1,9 +1,11 @@
+
 macroscript VrayToBlenderGLB
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Automate VrayToBlenderGLB"
 	buttonText:"Vray To Blender GLB"
 	Icon:#("Containers",6)
+
 (  
 	-- 	clearListener()       
 
@@ -11,7 +13,7 @@ macroscript VrayToBlenderGLB
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayToBlenderGLB
-	Version: 5.1
+	Version: 5.2
 	Software: 3D Studio Max 2021.3
 	Engine: V-Ray 5.20.23
 	Language: Maxscript
@@ -432,7 +434,7 @@ macroscript VrayToBlenderGLB
 			)  
 			catch  
 			(  
-				-- If Occlusion texture not found then remove the filename and flag as missing       
+				/* -- If Occlusion texture not found then remove the filename and flag as missing       
 				newMat.specularMap.filename = ""  
 				 
 				-- Add missing texture to missingTex array       
@@ -440,7 +442,9 @@ macroscript VrayToBlenderGLB
 				(  
 					-- Add missing texture to missingTex array       
 					append missingTex (newMat.name as string + " - Missing: Occlusion Texture")  
-				)  
+				) */
+				-- Add missing texture to missingTex array       
+				append missingTex (newMat.name as string + " - Missing: Occlusion Texture")  
 			)  
 
 			-- Normal        
