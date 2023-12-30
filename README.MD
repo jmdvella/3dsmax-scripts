@@ -76,8 +76,9 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 <br />
 
 ### JV_ExportSelectedGLB.ms
-- You must update the file path to match your output directory: @"C:\YOUR_OUTPUT_DIRECTORY\..."
-- Export selected objects directly to .glb, no prompts,	overwrite previous, naming based on object name.
+- Moves objects to 0,0,0 -> exports file as .glb -> deletes glb.log file -> moves object back to where it was in world space.
+- Export selected objects directly to .glb on the Desktop, no prompts, no log file, overwrite previous, naming based on object name.
+- Can export multiple objects at the same time by selection. 
 
 <br />
 
