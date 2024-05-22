@@ -1,13 +1,3 @@
-/*
-Author: James Vella
-Website: http://www.jamesvella.net
-Name-US: JV_CoronaToPhysical
-Version: 1.8
-Software: 3D Studio Max 2021.3
-Engine: Corona 7.0
-Language: Maxscript
-Description-US: Convert Corona Physical Materials to Autodesk Physical Materials 
-*/
 
 macroscript CoronaToPhysical
 	category:"Vella" 
@@ -15,7 +5,19 @@ macroscript CoronaToPhysical
 	tooltip:"Automate CoronaToPhysical"
 	buttonText:"CoronaMtl to PhysicalMtl"
 	Icon:#("GameTools",3)
+
 (
+	/*
+	Author: James Vella
+	Website: http://www.jamesvella.net
+	Name-US: JV_CoronaToPhysical
+	Version: 1.9
+	Software: 3D Studio Max 2021.3
+	Engine: Corona 7.0
+	Language: Maxscript
+	Description-US: Convert Corona Physical Materials to Autodesk Physical Materials 
+	*/
+
 	undo on
 
 	with animate off 
@@ -73,6 +75,21 @@ macroscript CoronaToPhysical
 			-- Check through CoronaNormal nodes to see if the 'Add gamma to input' checkbox is enabled
 			for i in getClassInstances CoronaNormal target:rootnode do
 			(
+				local newNormal = Normal_Bump ()
+				
+-- 				newNormal.name = i.name
+				
+				-- Copy bitmaps
+				newNormal.normal_map = i.normalMap
+				newNormal.bump_map = i.additionalBump
+				
+				-- Copy settings
+				newNormal.flipred = i.flipred
+				newNormal.flipgreen = i.flipgreen
+				newNormal.swap_rg = i.swapRedGreen
+				newNormal.mult_spin = i.multiplier
+				newNormal.bump_spin = i.additionalBumpStrength
+				
 				-- If the Bump / Normal Bump is using a Bitmap
 				if (i.normalMap != undefined) then
 				(
@@ -92,6 +109,9 @@ macroscript CoronaToPhysical
 						i.normalMap.bitmap = n 
 					)
 				)
+				
+				-- Replace the CoronaNormal with Normal
+				replaceInstances i newNormal
 			)
 		)
 		
@@ -164,47 +184,18 @@ macroscript CoronaToPhysical
 			catch()
 			
 			-- Bump  
-			try
+			if (oldMat.baseBumpTexmap != undefined) then
 			(
-				-- Copy Bump Amount value
-				newMat.bump_map_amt = oldMat.baseBumpMapAmount
-				
-				-- If there is a bitmap texture
-				if (oldMat.baseBumpTexmap != undefined) then
+				try
 				(
-					-- Copy from Bump node
-					newMat.bump_map = oldMat.baseBumpTexmap
+					-- Set the Clearcoat Bump Amount 
+					newMat.bump_map_amt = oldMat.baseBumpMapAmount
 					
-					-- If the Bump is a Normal Bump
-					if (oldMat.baseBumpTexmap.normalMap != undefined) then
-					(
-						-- Create Physical Normal node
-						newMat.bump_map = Normal_Bump ()
-						
-						-- Copy bitmap from Corona Mtl
-						newMat.bump_map.normal_map = oldMat.baseBumpTexmap.normalMap
-						
-						-- Copy Strength Multiplier
-						newMat.bump_map.mult_spin = oldMat.baseBumpTexmap.multiplier
-						
-						-- Copy Normal Bump settings
-						newMat.bump_map.flipred = oldMat.baseBumpTexmap.flipred
-						newMat.bump_map.flipgreen = oldMat.baseBumpTexmap.flipgreen
-						newMat.bump_map.swap_rg = oldMat.baseBumpTexmap.swapRedGreen
-
-						-- If Additional Bump texture in Normal Bump node then copy bitmap
-						if (oldMat.baseBumpTexmap.additionalBump != undefined) then
-						(
-							-- Copy bitmap from Corona Mtl
-							newMat.bump_map.bump_map = oldMat.baseBumpTexmap.additionalBump
-							
-							-- Copy Strength Multiplier
-							newMat.bump_map.bump_spin = oldMat.baseBumpTexmap.additionalBumpStrength
-						)
-					)
+					-- Copy bitmap from Corona Mtl
+					newMat.bump_map = oldMat.baseBumpTexmap
 				)
+				catch()
 			)
-			catch()
 			
 			-- Metal 
 			try
@@ -429,6 +420,8 @@ macroscript CoronaToPhysical
 			p = convertToPhysicalMtl i
 			replaceInstances i p
 		)
+		
+		undo off
 		
 		-- Refresh asset tracker
 		ATSOps.Refresh()
