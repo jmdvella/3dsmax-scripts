@@ -17,7 +17,28 @@ macroScript ExportSelectedGLB
 					overwrite previous, naming based on object name.
 	*/
 
+	-- Without Rotation/Position
+	for obj in selection do
+	(
+		-- Isolate the current object
+		hide selection
+		unhide obj
+
+		local exportPath = (@"C:\Users\" + sysInfo.username + @"\Desktop\" + obj.name + ".glb")
+		
+		-- Export the isolated object to its own .glb file
+		exportFile exportPath #noPrompt selectedOnly:true using:GLTF_Export
+
+		-- Unhide all objects again
+		unhide selection
+		
+		-- Optionally, delete the log file
+		deleteFile (exportPath + ".log")
+	)
+
 	-- With Rotation/Position
+	-- Useful to place objects at scene origin 0,0,0
+	-- Only works if you have reset all transforms/xform first
 	/* for obj in selection do
 	(
 		-- Isolate the current object
@@ -42,23 +63,4 @@ macroScript ExportSelectedGLB
 		-- Optionally, delete the log file
 		deleteFile (exportPath + ".log")
 	) */
-
-	-- Without Rotation/Position
-	for obj in selection do
-	(
-		-- Isolate the current object
-		hide selection
-		unhide obj
-
-		local exportPath = (@"C:\Users\" + sysInfo.username + @"\Desktop\" + obj.name + ".glb")
-		
-		-- Export the isolated object to its own .glb file
-		exportFile exportPath #noPrompt selectedOnly:true using:GLTF_Export
-
-		-- Unhide all objects again
-		unhide selection
-		
-		-- Optionally, delete the log file
-		deleteFile (exportPath + ".log")
-	)
 )
