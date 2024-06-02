@@ -38,7 +38,7 @@ macroScript ExportSelectedGLB
 
 	-- With Rotation/Position
 	-- Places objects at scene origin 0,0,0 and then return object to current location after export
-	-- Only works if you have reset all transforms/xform first
+	-- Only works if you have reset all transforms/xform first, if not your object will be offset or rotated incorrectly after export
 	/* for obj in selection do
 	(
 		-- Isolate the current object
