@@ -37,7 +37,7 @@ macroScript ExportSelectedGLB
 	)
 
 	-- With Rotation/Position
-	-- Useful to place objects at scene origin 0,0,0
+	-- Places objects at scene origin 0,0,0 and then return object to current location after export
 	-- Only works if you have reset all transforms/xform first
 	/* for obj in selection do
 	(
