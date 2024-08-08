@@ -305,7 +305,6 @@ macroscript VrayToGLB
 			fn ConvertToGltf i missingTex = 
 			( 
 				-- Basic settings for GLTF shader 
-				-- local newMat = glTFMaterial name:i.name
 				newMat = undefined
 				(
 					-- GLTF Fix thanks to DenisT.MaxDoctor
@@ -314,6 +313,7 @@ macroscript VrayToGLB
 						newMat = gltf_mat()
 					)
 				)
+				if newMat == undefined then return undefined
 
 				newMat.name = i.name 
 
@@ -563,6 +563,7 @@ macroscript VrayToGLB
 				) 
 			)
 
+			/*
 			-- Iterate through materials in multi-sub and make unique
 			for mat in getClassInstances MultiMaterial target:rootnode do 
 			(
@@ -576,7 +577,6 @@ macroscript VrayToGLB
 				)
 			)
 			
-			/*
 			-- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count 
 			for mat in getClassInstances MultiMaterial target:rootnode do 
 			( 
@@ -639,14 +639,14 @@ macroscript VrayToGLB
 			( 
 				-- Replace VRay2SidedMtl with Front material 
 				p = i.frontMtl  
-				replaceinstances i p 
+				if p != undefined then replaceinstances i p 
 			) 
 			
 			-- Replace Vray material with GLTF material 
 			for i in getClassInstances VRayMtl target:rootnode do 
 			( 
 				p = (ConvertToGltf i missingTex)
-				replaceInstances i p 
+				if p != undefined then replaceInstances i p
 			) 
 			
 			-- Print missing textures in the MAXScript listner and prompt user about missing files 
