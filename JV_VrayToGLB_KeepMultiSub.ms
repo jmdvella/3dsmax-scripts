@@ -9,7 +9,7 @@ macroscript VrayToGLB
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayToGLB
-	Version: 4.4
+	Version: 4.5
 	Software: 3D Studio Max 2024.2.3
 	Engine: V-Ray 6.20.03
 	Language: Maxscript
@@ -316,7 +316,7 @@ macroscript VrayToGLB
 				if newMat == undefined then return undefined
 
 				newMat.name = i.name 
-
+				/*
 				-- Glass/Liquid, replace when there is no diffuse texture  
 				if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or 
 					(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or 
@@ -329,7 +329,7 @@ macroscript VrayToGLB
 					-- Return without continuing the rest of the function for glass materials 
 					return (i = newMat) 
 				) 
-
+				*/
 				-- Diffuse 
 				if i.texmap_diffuse != undefined then 
 				( 
