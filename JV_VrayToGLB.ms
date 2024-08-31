@@ -9,7 +9,7 @@ macroscript VrayToGLB
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayToGLB
-	Version: 4.5
+	Version: 4.6
 	Software: 3D Studio Max 2024.2.3
 	Engine: V-Ray 6.20.03
 	Language: Maxscript
@@ -138,7 +138,7 @@ macroscript VrayToGLB
 				) 
 
 				-- Find first bitmap in the scene  
-				local first_bitmap_filename 
+				local first_bitmap_filename = undefined
 
 				for tex in getClassInstances bitmapTex target:rootnode do 
 				( 
@@ -149,17 +149,18 @@ macroscript VrayToGLB
 				-- Variables for created bitmaps			 
 				local created_diffuse = undefined 
 				local created_roughness = undefined 
+				local bitmap_dir = undefined
+				local bitmap_ext = undefined
 
 				-- Create Diffuse, from first found texture in the scene					 
 				if i.texmap_diffuse == undefined then 
 				( 
 					-- Get file directory and extension from first_bitmap_filename 
-					try
+					if first_bitmap_filename != undefined then
 					(
-					local bitmap_dir = getFilenamePath first_bitmap_filename 
-					local bitmap_ext = getFilenameType first_bitmap_filename 
+						bitmap_dir = getFilenamePath first_bitmap_filename 
+						bitmap_ext = getFilenameType first_bitmap_filename 
 					)
-					catch()
 					
 					try 
 					( 
@@ -319,7 +320,11 @@ macroscript VrayToGLB
 						newMat = gltf_mat()
 					)
 				)
-				if newMat == undefined then return undefined
+				if newMat == undefined then
+				(
+					messageBox ("Your 3dsmax version does not support GLTF.\n3dsmax 2023+ Required.")
+					return undefined
+				) 
 
 				newMat.name = i.name 
 
