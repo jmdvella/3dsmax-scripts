@@ -153,10 +153,14 @@ macroscript VrayToGLB
 				-- Create Diffuse, from first found texture in the scene					 
 				if i.texmap_diffuse == undefined then 
 				( 
+					try
+					(
 					-- Get file directory and extension from first_bitmap_filename 
 					local bitmap_dir = getFilenamePath first_bitmap_filename 
 					local bitmap_ext = getFilenameType first_bitmap_filename 
-					
+					)
+					catch()
+
 					try 
 					( 
 						-- Change the filename to match the material name 
@@ -316,7 +320,7 @@ macroscript VrayToGLB
 				if newMat == undefined then return undefined
 
 				newMat.name = i.name 
-				/*
+				
 				-- Glass/Liquid, replace when there is no diffuse texture  
 				if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or 
 					(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or 
@@ -329,7 +333,7 @@ macroscript VrayToGLB
 					-- Return without continuing the rest of the function for glass materials 
 					return (i = newMat) 
 				) 
-				*/
+				
 				-- Diffuse 
 				if i.texmap_diffuse != undefined then 
 				( 
