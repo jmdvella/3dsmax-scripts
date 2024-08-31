@@ -154,8 +154,12 @@ macroscript VrayToGLB
 				if i.texmap_diffuse == undefined then 
 				( 
 					-- Get file directory and extension from first_bitmap_filename 
+					try
+					(
 					local bitmap_dir = getFilenamePath first_bitmap_filename 
 					local bitmap_ext = getFilenameType first_bitmap_filename 
+					)
+					catch()
 					
 					try 
 					( 
@@ -308,6 +312,8 @@ macroscript VrayToGLB
 				newMat = undefined
 				(
 					-- GLTF Fix thanks to DenisT.MaxDoctor
+					-- Plugin loads with time delay, may not create unless this method is used instead of
+					-- newMat = glTFMaterial() 	
 					if iskindof (gltf_mat = execute "glTFMaterial") Material do
 					(
 						newMat = gltf_mat()
@@ -316,7 +322,7 @@ macroscript VrayToGLB
 				if newMat == undefined then return undefined
 
 				newMat.name = i.name 
-				/*
+
 				-- Glass/Liquid, replace when there is no diffuse texture  
 				if ((MatchPattern (i.name) pattern:"*Glass*" ignoreCase:true) or 
 					(MatchPattern (i.name) pattern:"*Water*" ignoreCase:true) or 
@@ -329,7 +335,7 @@ macroscript VrayToGLB
 					-- Return without continuing the rest of the function for glass materials 
 					return (i = newMat) 
 				) 
-				*/
+
 				-- Diffuse 
 				if i.texmap_diffuse != undefined then 
 				( 
