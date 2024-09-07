@@ -811,35 +811,36 @@ Icon:"MassFX\CreateHingeConstraint"
         (
             clearListener()
 
-            -- Find Missing Bitmaps
-            if chk_findTex.checked then 
+            with undo on 
             (
-                findTextures = true 
-                RepathFoundAssets()
-            )
-            else
-            (
-                findTextures = false
-            )
-
-            -- Rename GLTF Map Nodes
-            if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
-
-            -- Remove Subdivisions
-            if chk_rmSubdiv.checked then RemoveSubdivions()
-
-            -- Collapse Multisubs
-            if chk_rmMultiSub.checked then CollapseMultiSubs()
-
-            -- Hide Warning Popups
-            if chk_hWarnings.checked then hideWarningPopups = true else hideWarningPopups = false
-
-            -- Convert Materials to Corona/Vray
-            if chk_cSelMat.checked then 
-            (
-                convertSelectedMaterials = true 
-                with undo on
+                -- Find Missing Bitmaps
+                if chk_findTex.checked then 
                 (
+                    findTextures = true 
+                    RepathFoundAssets()
+                )
+                else
+                (
+                    findTextures = false
+                )
+
+                -- Rename GLTF Map Nodes
+                if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
+
+                -- Remove Subdivisions
+                if chk_rmSubdiv.checked then RemoveSubdivions()
+
+                -- Collapse Multisubs
+                if chk_rmMultiSub.checked then CollapseMultiSubs()
+
+                -- Hide Warning Popups
+                if chk_hWarnings.checked then hideWarningPopups = true else hideWarningPopups = false
+
+                -- Convert Materials to Corona/Vray
+                if chk_cSelMat.checked then 
+                (
+                    convertSelectedMaterials = true 
+
                     if convertSelectedMaterials then 
                     (
                         for obj in selection where (selection.count > 0) do
@@ -848,18 +849,18 @@ Icon:"MassFX\CreateHingeConstraint"
                             ConvertCoronaVray()
                         )
                     )
+
                 )
-            )
-            else 
-            (
-                convertSelectedMaterials = false
-                with undo on 
+                else 
                 (
+                    convertSelectedMaterials = false
+
                     theTarget = rootnode
                     ConvertCoronaVray()
-                )
-            )   
 
+                )   
+            )
+            
             PrintMissingTextures()
         )
 
