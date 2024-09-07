@@ -70,6 +70,13 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CoronaVrayToGLB.ms
+- Convert Corona Physical & Vray Materials to GLTF Materials
+- UI For Converting Materials, Find Bitmaps, Exporting to GLB, Save/Load Custom settings
+- Supports selected objects or entire scene
+
+<br />
+
 ### JV_CreateVraySun.ms
 - Toggle Camera Vertical Tilt on/off
 
