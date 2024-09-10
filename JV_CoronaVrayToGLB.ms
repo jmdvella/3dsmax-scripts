@@ -36,7 +36,6 @@ Icon:"MassFX\CreateHingeConstraint"
     ---------- 3dsmax settings ----------
 
     animButtonState = false -- Turn off "Auto Key"
-    clearListener()
 
     ---------- Functions ----------
 
@@ -746,6 +745,8 @@ Icon:"MassFX\CreateHingeConstraint"
         -- Convert Materials (button)
         on btn_convertMtl pressed do
         (
+            clearListener()
+            
             -- Rename GLTF Map Nodes
             if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
 
