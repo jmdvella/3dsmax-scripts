@@ -212,6 +212,8 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Function to convert Corona or VrayMtl to glTF material 
     fn ConvertToGltf currentMaterial = 
     ( 
+        RepathFoundAssets() -- Re-path bitmaps to "Found" location, must be executed after converting Engine specific to standard bitmaps
+
         -- Basic settings for GLTF shader 
         newMaterial = undefined
         (
@@ -358,7 +360,7 @@ Icon:"MassFX\CreateHingeConstraint"
     (
         for i in getClassInstances VRayBitmap target:theTarget do  
         (  
-            if (i.HDRIMapName != undefined) and (doesFileExist i.HDRIMapName) then
+            if (i.HDRIMapName != undefined) then
             (
                 newBitmap = Bitmaptexture() 
                 newBitmap.filename = i.HDRIMapName  
@@ -408,7 +410,7 @@ Icon:"MassFX\CreateHingeConstraint"
     (
         for i in getClassInstances CoronaBitmap target:theTarget do  
         (  
-            if doesFileExist i.filename then
+            if i != undefined then
             (
                 newBitmap = Bitmaptexture() 
                 newBitmap.filename = i.filename  
@@ -746,7 +748,7 @@ Icon:"MassFX\CreateHingeConstraint"
         on btn_convertMtl pressed do
         (
             clearListener()
-            
+
             -- Rename GLTF Map Nodes
             if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
 
@@ -758,7 +760,6 @@ Icon:"MassFX\CreateHingeConstraint"
 
             with undo on 
             (
-                RepathFoundAssets()
                 -- Remove Subdivisions
                 if chk_rmSubdiv.checked then RemoveSubdivions()
 
