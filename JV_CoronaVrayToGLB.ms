@@ -16,7 +16,7 @@ Icon:"MassFX\CreateHingeConstraint"
 
     ---------- Variables ----------
 
-    scriptVersion = "1.0"
+    scriptVersion = "2.0"
     renderEngine = ""
     findTextures = true
     renameGltfMaps = true
@@ -36,6 +36,7 @@ Icon:"MassFX\CreateHingeConstraint"
     ---------- 3dsmax settings ----------
 
     animButtonState = false -- Turn off "Auto Key"
+    clearListener()
 
     ---------- Functions ----------
 
@@ -46,31 +47,31 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Search asset tracker and repath all "Found" assets to actual path
     fn RepathFoundAssets =
     (
-        -- "Found" Assets -> repath to found location for Status: OK
-        for foundBitmap in (getClassInstances Bitmaptexture) do
-        (
-            locatedBitmap = foundBitmap.filename
-            fixedBitmapPath = substituteString locatedBitmap "\\" "/"
-            bitmapToRepath = ATSOps.TestFileSystemStatus fixedBitmapPath #Found 
-            selectBitmapInATS = ATSOps.SelectFiles locatedBitmap
-            if bitmapToRepath then ATSOps.ResolveSelectionToAbsolute()
-        )
+        -- "File Missing" in Asset Tracker
+        missingATSFiles = #()
+        enumerateFiles (fn getNames name a = appendIfUnique a name) missingATSFiles #missing
 
-        -- "Missing" Assets -> flag for user
-        for foundBitmap in (getClassInstances Bitmaptexture) do
+        -- Print Missing Assets
+        for i in missingATSFiles do
         (
-            locatedBitmap = foundBitmap.filename
-            fixedBitmapPath = substituteString locatedBitmap "\\" "/"
-            bitmapToRepath = ATSOps.TestFileSystemStatus fixedBitmapPath #Missing
-            -- selectBitmapInATS = ATSOps.SelectFiles locatedBitmap
-            if bitmapToRepath then appendIfUnique missingTex (getFilenameFile foundBitmap.filename + ": File Missing. Check the Asset Tracker and resolve Status to Found or OK")
+            appendIfUnique missingTex (getFilenameFile i + ": File Missing. Check the Asset Tracker and resolve Status to Found or OK")
+        )
+            
+        -- Combine arrays removing missing files
+        allFiles = for foundBitmap in (getClassInstances Bitmaptexture) collect foundBitmap.filename
+        foundFiles = for f in allFiles where not (findItem missingATSFiles f > 0) collect f
+    
+        -- Repath Found or OK assets
+        for i in foundFiles where (foundFiles.count > 0) do
+        (
+            ATSOps.SelectFiles i
+            ATSOps.ResolveSelectionToAbsolute()
         )
     )
 
     -- Search the material for textures -> check directory for matching name
     fn FindMissingTextures currentMaterial textureType = 
     (
-        -- print ("Now searching texture dir")
         -- Find any bitmap in the material
         locatedBitmap = undefined
         for foundBitmap in (getClassInstances Bitmaptexture target:currentMaterial) do
@@ -136,7 +137,6 @@ Icon:"MassFX\CreateHingeConstraint"
                     if regexSearch.IsMatch(bitmapName) then
                     (
                         locatedBitmap.filename = (bitmapDir + bitmapName + bitmapExtension)
-                        -- print ("FindMissingTextures: " + locatedBitmap.filename)
                         return locatedBitmap
                     )
                 )
@@ -147,12 +147,8 @@ Icon:"MassFX\CreateHingeConstraint"
     )
 
     -- Search for bitmaps if findTexture == True
-    fn ReplaceBitmapNodes currentMaterial bitmapNode textureType = 
+    fn SearchBitmapNodes currentMaterial bitmapNode textureType = 
     (
-        -- print currentMaterial.name
-        -- print (textureType)
-        -- print ("bitmapNode: " + bitmapNode as string)
-
         locatedBitmap = undefined
         
         -- Look for bitmap in this node tree
@@ -160,7 +156,6 @@ Icon:"MassFX\CreateHingeConstraint"
         ( 
             for foundBitmap in (getClassInstances Bitmaptexture target:bitmapNode) do  
             (
-                -- print ("foundBitmap: " + foundBitmap as string)
                 locatedBitmap = foundBitmap
                 return foundBitmap
             )
@@ -191,6 +186,30 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Convert Materials
     ----------------------------------
 
+    -- Replaces the found bitmap from Corona/Vray to GLTF node (eg. BaseColor or Rough)
+    fn ReplaceGLTFBitmap materialName materialMap bitmapNode bitmapType gammaValue gltfCompliant = 
+    (
+        if bitmapNode != undefined then 
+        ( 
+            -- Look for bitmap in this node tree
+            for foundBitmap in (getClassInstances Bitmaptexture target:bitmapNode) do  
+            ( 
+                materialMap = foundBitmap 
+                if doesFileExist materialMap.filename then
+                (
+                    materialMap.bitmap = openBitmap materialMap.filename gamma:gammaValue
+                )
+                if materialMap != undefined then return materialMap
+            ) 
+        ) 
+    
+        if (materialMap == undefined) and (gltfCompliant == "Required") then 
+        (
+            appendIfUnique missingTex (materialName + " - Missing: " + bitmapType + " Texture") 
+            return undefined
+        )
+    )
+
     -- Function to convert Corona or VrayMtl to glTF material 
     fn ConvertToGltf currentMaterial = 
     ( 
@@ -217,18 +236,17 @@ Icon:"MassFX\CreateHingeConstraint"
         diffuseNode = undefined
         roughNode = undefined
         bumpNode = undefined
-        bumpAdditionalNode = undefined
         normalNode = undefined
         metalNode = undefined
         alphaNode = undefined
         emissionNode = undefined
+        occlusionNode = undefined
 
         if renderEngine == "Corona" then
         (
             diffuseNode = currentMaterial.baseTexmap
             roughNode = currentMaterial.baseRoughnessTexmap
             bumpNode = currentMaterial.baseBumpTexmap
-            -- try(bumpAdditionalNode = currentMaterial.baseBumpTexmap.additionalBump)catch()
             try(normalNode = currentMaterial.baseBumpTexmap.normalMap)catch()
             metalNode = currentMaterial.metalnessTexmap
             alphaNode = currentMaterial.opacityTexmap
@@ -240,162 +258,81 @@ Icon:"MassFX\CreateHingeConstraint"
             diffuseNode = currentMaterial.texmap_diffuse
             roughNode = currentMaterial.texmap_reflectionGlossiness
             bumpNode = currentMaterial.texmap_bump
-            -- try(bumpAdditionalNode = currentMaterial.texmap_bump.bump_map)catch()
             try(normalNode = currentMaterial.texmap_bump.normal_map)catch()
             metalNode = currentMaterial.texmap_metalness
             alphaNode = currentMaterial.texmap_opacity
             emissionNode = currentMaterial.texmap_self_illumination
         )
 
+
         -- Search directory for textures
         if findTextures == true then
         (
-            foundDiffuse = ReplaceBitmapNodes currentMaterial diffuseNode "Diffuse"
-            if foundDiffuse != undefined then newMaterial.baseColorMap = foundDiffuse
+            foundDiffuse = SearchBitmapNodes currentMaterial diffuseNode "Diffuse"
+            if foundDiffuse != undefined then diffuseNode = foundDiffuse
 
-            foundRough = ReplaceBitmapNodes currentMaterial roughNode "Roughness"
-            if foundRough != undefined then newMaterial.roughnessMap = foundRough
+            foundRough = SearchBitmapNodes currentMaterial roughNode "Roughness"
+            if foundRough != undefined then roughNode = foundRough
 
-            foundMetal = ReplaceBitmapNodes currentMaterial metalNode "Metal"
-            if foundMetal != undefined then newMaterial.metalnessMap = foundMetal
+            foundMetal = SearchBitmapNodes currentMaterial metalNode "Metal"
+            if foundMetal != undefined then metalNode = foundMetal
 
-            foundEmission = ReplaceBitmapNodes currentMaterial emissionNode "Emission"
-            if foundEmission != undefined then newMaterial.emissionMap = foundEmission
+            foundEmission = SearchBitmapNodes currentMaterial emissionNode "Emission"
+            if foundEmission != undefined then emissionNode = foundEmission
 
-            foundOcclusion = ReplaceBitmapNodes currentMaterial undefined "Occlusion"
-            if foundOcclusion != undefined then newMaterial.ambientOcclusionMap = foundOcclusion
+            foundOcclusion = SearchBitmapNodes currentMaterial undefined "Occlusion"
+            if foundOcclusion != undefined then occlusionNode = foundOcclusion
 
-            foundNormal = ReplaceBitmapNodes currentMaterial normalNode "Normal"
-            if foundNormal != undefined then newMaterial.normalMap = foundNormal
+            foundNormal = SearchBitmapNodes currentMaterial normalNode "Normal"
+            if foundNormal != undefined then normalNode = foundNormal
 
-            foundAlpha = ReplaceBitmapNodes currentMaterial alphaNode "Alpha"
-            if foundAlpha != undefined then newMaterial.AlphaMap = foundAlpha
+            foundAlpha = SearchBitmapNodes currentMaterial alphaNode "Alpha"
+            if foundAlpha != undefined then alphaNode = foundAlpha
         )
         
         -- Diffuse 
-        if newMaterial.baseColorMap == undefined then
-        (
-            if diffuseNode != undefined then 
-            ( 
-                -- Look for bitmap in this node tree
-                for foundBitmap in (getClassInstances Bitmaptexture target:diffuseNode) do  
-                ( 
-                    newMaterial.baseColorMap = foundBitmap 
-                    newMaterial.baseColorMap.bitmap = openBitmap newMaterial.baseColorMap.filename gamma:2.2
-                ) 
-            ) 
+        gltfDiffuse = ReplaceGLTFBitmap newMaterial.name newMaterial.baseColorMap diffuseNode "Diffuse" 2.2 "Required"
+        if gltfDiffuse != undefined then newMaterial.baseColorMap = gltfDiffuse
 
-            if newMaterial.baseColorMap == undefined then 
-            (
-                appendIfUnique missingTex (newMaterial.name + " - Missing: Diffuse Texture") 
-            )
-        )
-        
         -- Roughness 
-        if newMaterial.roughnessMap == undefined then
-        (
-            if roughNode != undefined then 
-            ( 
-                -- Look for bitmap in this node tree
-                for foundBitmap in (getClassInstances Bitmaptexture target:roughNode) do  
-                ( 
-                    newMaterial.roughnessMap = foundBitmap 
-                    newMaterial.roughnessMap.bitmap = openBitmap newMaterial.roughnessMap.filename gamma:1.0
-                ) 
-            ) 
-
-            if newMaterial.roughnessMap == undefined then 
-            (
-                appendIfUnique missingTex (newMaterial.name + " - Missing: Roughness Texture") 
-            )
-        )       
+        gltfRough = ReplaceGLTFBitmap newMaterial.name newMaterial.roughnessMap roughNode "Roughness" 1.0 "Required"
+        if gltfRough != undefined then newMaterial.roughnessMap = gltfRough   
         
         -- Metalness
-        if newMaterial.metalnessMap == undefined then
-        (
-            if metalNode != undefined then 
-            ( 
-                -- Look for bitmap in this node tree 
-                for foundBitmap in (getClassInstances Bitmaptexture target:metalNode) do  
-                ( 
-                    newMaterial.metalnessMap = foundBitmap 
-                    newMaterial.metalnessMap.bitmap = openBitmap newMaterial.metalnessMap.filename gamma:1.0
-                ) 
-            ) 
-
-            if newMaterial.metalnessMap == undefined then 
-            (
-                appendIfUnique missingTex (newMaterial.name + " - Missing: Metalness Texture") 
-            )
-        )
+        gltfMetal = ReplaceGLTFBitmap newMaterial.name newMaterial.metalnessMap metalNode "Metalness" 1.0 "Required"
+        newMaterial.metalnessMap = gltfMetal 
 
         -- Normal 
+        gltfNormal = ReplaceGLTFBitmap newMaterial.name newMaterial.normalMap normalNode "Normal" 1.0 "Required"
+        if gltfNormal != undefined then newMaterial.normalMap = gltfNormal 
+            
         if newMaterial.normalMap == undefined then
         (
-            if normalNode != undefined then 
-            (
-                -- Look for normal bitmap in this node tree 
-                for foundBitmap in (getClassInstances Bitmaptexture target:normalNode) do  
-                ( 
-                    newMaterial.normalMap = foundBitmap 
-                    newMaterial.normalMap.bitmap = openBitmap newMaterial.normalMap.filename gamma:1.0
-                ) 
-            )
-
-            if newMaterial.normalMap == undefined then
-            (
-                if bumpNode != undefined then
-                (
-                    -- Look for bump texture in this node tree 
-                    for foundBitmap in (getClassInstances Bitmaptexture target:bumpNode) do  
-                    ( 
-                        newMaterial.normalMap = foundBitmap 
-                        newMaterial.normalMap.bitmap = openBitmap newMaterial.normalMap.filename gamma:1.0
-                    ) 
-                )
-
-                appendIfUnique missingTex (newMaterial.name + " - Missing: Normal Texture") 
-            )
+            -- Bump (Not GLTF compliant)
+            gltfNormal = ReplaceGLTFBitmap newMaterial.name newMaterial.normalMap bumpNode "Bump" 1.0 "Optional"
+            if gltfNormal != undefined then newMaterial.normalMap = gltfNormal 
         )
 
         -- Occlusion
-        if newMaterial.ambientOcclusionMap == undefined then
-        (
-            appendIfUnique missingTex (newMaterial.name + " - Missing: Occlusion Texture") 
-        )
+        gltfOcclusion = ReplaceGLTFBitmap newMaterial.name newMaterial.ambientOcclusionMap occlusionNode "Occlusion" 1.0 "Required"
+        if gltfOcclusion != undefined then newMaterial.ambientOcclusionMap = gltfOcclusion 
 
         -- Optional textures
 
         -- Emission 
-        if newMaterial.emissionMap == undefined then
-        (
-            if emissionNode != undefined then 
-            ( 
-                -- Look for bitmap in this node tree 
-                for foundBitmap in (getClassInstances Bitmaptexture target:emissionNode) do  
-                ( 
-                    newMaterial.emissionMap = foundBitmap 
-                    newMaterial.emissionMap.bitmap = openBitmap newMaterial.emissionMap.filename gamma:2.2
-                ) 
-            ) 
-        )
+        gltfEmission = ReplaceGLTFBitmap newMaterial.name newMaterial.emissionMap emissionNode "Emission" 2.2 "Optional"
+        if gltfEmission != undefined then newMaterial.emissionMap = gltfEmission 
                 
         -- Alpha 
-        if newMaterial.AlphaMap == undefined then
+        gltfAlpha = ReplaceGLTFBitmap newMaterial.name newMaterial.AlphaMap alphaNode "Alpha" 1.0 "Optional"
+        if gltfAlpha != undefined then newMaterial.AlphaMap = gltfAlpha
+
+        if newMaterial.AlphaMap != undefined then
         (
-            if alphaNode != undefined then 
-            (
-                -- Look for bitmap in this node tree 
-                for foundBitmap in (getClassInstances Bitmaptexture target:alphaNode) do  
-                ( 
-                    newMaterial.AlphaMap = foundBitmap 
-                    newMaterial.AlphaMap.bitmap = openBitmap newMaterial.AlphaMap.filename gamma:1.0
-                    newMaterial.alphaMode = 2	-- Mask mode 
-                    newMaterial.alphaCutoff = 1.0 
-                ) 
-            )
+            newMaterial.alphaMode = 2	-- Mask mode 
+            newMaterial.alphaCutoff = 1.0 
         )
-                
+
         ----------------------------------
         -- Rename GLTF Maps
         ----------------------------------
@@ -809,32 +746,23 @@ Icon:"MassFX\CreateHingeConstraint"
         -- Convert Materials (button)
         on btn_convertMtl pressed do
         (
-            clearListener()
+            -- Rename GLTF Map Nodes
+            if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
+
+            -- Hide Warning Popups
+            if chk_hWarnings.checked then hideWarningPopups = true else hideWarningPopups = false
+
+            -- Find Missing Bitmaps
+            if chk_findTex.checked then findTextures = true else findTextures = false
 
             with undo on 
             (
-                -- Find Missing Bitmaps
-                if chk_findTex.checked then 
-                (
-                    findTextures = true 
-                    RepathFoundAssets()
-                )
-                else
-                (
-                    findTextures = false
-                )
-
-                -- Rename GLTF Map Nodes
-                if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
-
+                RepathFoundAssets()
                 -- Remove Subdivisions
                 if chk_rmSubdiv.checked then RemoveSubdivions()
 
                 -- Collapse Multisubs
                 if chk_rmMultiSub.checked then CollapseMultiSubs()
-
-                -- Hide Warning Popups
-                if chk_hWarnings.checked then hideWarningPopups = true else hideWarningPopups = false
 
                 -- Convert Materials to Corona/Vray
                 if chk_cSelMat.checked then 
@@ -857,7 +785,6 @@ Icon:"MassFX\CreateHingeConstraint"
 
                     theTarget = rootnode
                     ConvertCoronaVray()
-
                 )   
             )
             
