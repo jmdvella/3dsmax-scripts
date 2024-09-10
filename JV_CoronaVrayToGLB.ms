@@ -301,7 +301,7 @@ Icon:"MassFX\CreateHingeConstraint"
         
         -- Metalness
         gltfMetal = ReplaceGLTFBitmap newMaterial.name newMaterial.metalnessMap metalNode "Metalness" 1.0 "Required"
-        newMaterial.metalnessMap = gltfMetal 
+        if gltfMetal != undefined then newMaterial.metalnessMap = gltfMetal 
 
         -- Normal 
         gltfNormal = ReplaceGLTFBitmap newMaterial.name newMaterial.normalMap normalNode "Normal" 1.0 "Required"
