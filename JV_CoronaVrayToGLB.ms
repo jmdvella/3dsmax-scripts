@@ -446,7 +446,7 @@ Icon:"MassFX\CreateHingeConstraint"
         )
     )
 
-    -- Function to convert Corona or VrayMtl to glTF material 
+    -- Convert Corona or VrayMtl to glTF material 
     fn ConvertToGltf currentMaterial = 
     ( 
         -- Re-path bitmaps to "Found" location, must be after converting Engine specific to standard bitmaps
@@ -1162,7 +1162,7 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Collapse Multi-Sub Materials
     ----------------------------------
 
-    -- Function to count bitmaps within each material in a multi-sub 
+    -- Count bitmaps within each material in a multi-sub 
     -- This is to replace the multi-sub with the highest texture count in CollapseMultiSubs()
     fn CountBitmapsFromMaterial mat = 
     ( 
