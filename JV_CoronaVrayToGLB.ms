@@ -5,7 +5,8 @@ Version Updates
                     Collapse Multi-Subs, Hide Warning Popups (Missing textures)
 2024/09/10  v02     Fixes for the asset tracker when finding bitmaps (doesnt repath missing assets)
                     Flags missing assets for the user to find and repath in the listener/popup window     
-2024/11/02  v03     Glass to transmission, sheen, clearcoat, when no bitmap use color or numerical values if changed from defaults. 
+2024/11/02  v03     Additions (textures): Glass to transmission, sheen, clearcoat
+                    Additions (values): when no bitmap use color or numerical values if changed from defaults. 
                     Convert VrayColor or CoronaColor nodes to color swatch.
                     Convert Glossiness textures to Roughness textures (invert).
                     Convert non compliant bitmaps to jpg (example .tif).
