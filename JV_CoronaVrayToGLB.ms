@@ -374,7 +374,7 @@ Icon:"MassFX\CreateHingeConstraint"
                     save newBitmap
                     close newBitmap
                     close originalBitmap
-                    free newBitmap
+                    free newBitmap -- garbage collect
                     free originalBitmap
             
                     currentBitmap.filename = newBitmap.filename
@@ -1370,7 +1370,7 @@ Icon:"MassFX\CreateHingeConstraint"
             exportDirectory = getSavePath caption:"Save Directory" 
             et_path.text = (exportDirectory as string) + @"\"
             
-            -- User presses cancel when selecting a directory
+            -- User press cancel when selecting a directory
             if exportDirectory == undefined then et_path.text = previousDirectory
         )
 
@@ -1480,7 +1480,6 @@ Icon:"MassFX\CreateHingeConstraint"
             saveDirectory = getDir #userScripts + "\\Vella"  
             if not doesDirectoryExist saveDirectory do makeDir saveDirectory  
 
-            -- Save settings to text file           
             fStream = createFile savedSettings  
                 
             -- Save to text file        
@@ -1499,7 +1498,6 @@ Icon:"MassFX\CreateHingeConstraint"
             format "%\n" (if chk_invertGloss.state then 1 else 0) to:fStream   
             format "%\n" (if chk_GlbCompliant.state then 1 else 0) to:fStream  
             
-            -- Close the text file          
             close fStream  
             free fStream  
             ForceCompleteRedraw()   
@@ -1508,10 +1506,9 @@ Icon:"MassFX\CreateHingeConstraint"
         -- Restore Original Settings (button)  
         on btn_restoreSettings pressed do  
         (  
-            -- Delete the settings text file           
             if doesFileExist savedSettings then deleteFile savedSettings  
 
-            -- Restore checkboxes
+            -- Restore checkboxes 
             et_path.text = defaultExportDirectory
             chk_findTex.checked = true 
             chk_renameGltfMaps.checked = true 
