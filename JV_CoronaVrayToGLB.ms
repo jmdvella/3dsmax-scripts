@@ -349,7 +349,7 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Convert Materials
     ---------------------------------- 
 
-    -- Convert files to jpg if not jpg or png
+    -- Convert files to jpg if not jpg/png
     fn ConvertBitmapToJpg currentBitmap =
     (
         bitmapFileName = currentBitmap.filename
