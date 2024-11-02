@@ -1,3 +1,16 @@
+/*
+Version Updates
+2024/09/07  v01     First release includes Diffuse/Roughness/Metal/Occlusion/Emission/Opacity/Normal
+                    Find Missing Bitmaps, Rename GLTF Maps, Remove GLB .log file, Remove Subdivisions
+                    Collapse Multi-Subs, Hide Warning Popups (Missing textures)
+2024/09/10  v02     Fixes for the asset tracker when finding bitmaps (doesnt repath missing assets)
+                    Flags missing assets for the user to find and repath in the listener/popup window     
+2024/11/02  v03     Glass to transmission, sheen, clearcoat, when no bitmap use color or numerical values if changed from defaults. 
+                    Convert VrayColor or CoronaColor nodes to color swatch.
+                    Convert Glossiness textures to Roughness textures (invert).
+                    Convert non compliant bitmaps to jpg (example .tif).
+*/
+
 macroscript CoronaVrayToGLB
 category:"Vella" 
 tooltip:"Automate CoronaVrayToGLB"
@@ -16,14 +29,19 @@ Icon:"MassFX\CreateHingeConstraint"
 
     ---------- Variables ----------
 
-    scriptVersion = "2.0"
+    scriptVersion = "3.0"
     renderEngine = ""
+    testMode = false
+    -- testMode = true -- Disable for live
     findTextures = true
     renameGltfMaps = true
     hideWarningPopups = false
     exportSelectedObjs = true
     removeGlbLogFile = true
+    convertGlbCompliant = true
+    convertGlossinessMaps = true
     convertSelectedMaterials = true
+    glassToTransmission = true
     theTarget = rootnode -- switch to obj for selected objects
     missingTex = #()
 
@@ -86,7 +104,7 @@ Icon:"MassFX\CreateHingeConstraint"
 
         if locatedBitmap != undefined then
         (
-            wordsToRemove = #("Diff", "Base", "BaseColor", "Color", "Albe", "Alph", "Opac", "Metal", "Rough", "AO", "Occlus", "AmbientO", "Emiss", "SelfIllum", "Norm")
+            wordsToRemove = #("diff", "base", "basecolor", "color", "bcolor", "albe", "alph", "opac", "metal", "rough", "ao", "occlus", "ambient", "emis", "self", "illum", "norm", "sheen")
 
             bitmapDir = getFilenamePath locatedBitmap.bitmap.filename
             bitmapName = getFilenameFile locatedBitmap.bitmap.filename
@@ -115,13 +133,18 @@ Icon:"MassFX\CreateHingeConstraint"
             wordsToFind = #()
             case textureType of
             (
-                "Diffuse": wordsToFind = #("Diff", "Base", "BaseColor", "Color", "Albe")
-                "Alpha": wordsToFind = #("Alph", "Opac")
-                "Metal": wordsToFind = #("Metal")
-                "Roughness": wordsToFind = #("Rough")
-                "Occlusion": wordsToFind = #("AO", "Occlus", "Ambient")
-                "Emission": wordsToFind = #("Emiss", "Self", "Illum")
-                "Normal": wordsToFind = #("Norm")
+                "Diffuse": wordsToFind = #("diff", "base", "basecolor", "color", "bcolor", "albe")
+                "Alpha": wordsToFind = #("alph", "opac")
+                "Metal": wordsToFind = #("metal")
+                "Roughness": wordsToFind = #("rough")
+                "Occlusion": wordsToFind = #("ao", "occlus", "ambient")
+                "Emission": wordsToFind = #("emis", "self", "illum")
+                "Normal": wordsToFind = #("norm")
+                "Sheen": wordsToFind = #("sheen")
+                "SheenRoughness": wordsToFind = #("sheen_r", "sheen r", "sheen-r", "sheenr")
+                "ClearCoat": wordsToFind = #("clear", "coat", "clearcoat")
+                "ClearCoatRoughness": wordsToFind = #("clear-r","clear_r", "clear r", "coat-r", "coat_r", "coat r", "clearcoat-r", "clearcoat_r", "clearcoat r", "clear_coat-r", "clear_coat_r", "clear_coat r")
+                "ClearCoatNormal": wordsToFind = #("clear-n","clear_n", "clear n", "coat-n", "coat_n", "coat n", "clearcoat-n","clearcoat_n","clearcoat n")
             )
 
             -- Replace suffix
@@ -129,7 +152,7 @@ Icon:"MassFX\CreateHingeConstraint"
             (
                 -- Loop through the words to find
                 for word in wordsToFind do
-                (
+                (  
                     regexPattern = cleanedBitmapName + "[-_](" + word + ".*)$"  -- Match hyphen or underscore eg Sofa_Diffuse or Sofa-Diffuse
                     regexSearch = dotNetObject "System.Text.RegularExpressions.Regex" regexPattern (dotNetClass "System.Text.RegularExpressions.RegexOptions").IgnoreCase
 
@@ -141,7 +164,6 @@ Icon:"MassFX\CreateHingeConstraint"
                 )
             )
         )
-
         return undefined
     )
 
@@ -170,20 +192,237 @@ Icon:"MassFX\CreateHingeConstraint"
             )
             else
             (
-                if (bitmapNode != alphaNode) or (bitmapNode != emissionNode) then 
+                if  (bitmapNode != alphaNode) or 
+                    (bitmapNode != emissionNode) or 
+                    (bitmapNode != sheenNode) or
+                    (bitmapNode != sheenRoughNode) or
+                    (bitmapNode != clearCoatNode) or
+                    (bitmapNode != clearCoatRoughNode) or
+                    (bitmapNode != clearCoatNormalNode) then 
                 (
                     -- Did not find bitmap in the texture directory that matches (eg. texture dir search)
                     appendIfUnique missingTex (currentMaterial.name + " - Missing: " + textureType + " Texture") 
                 )
             )
         )
+        return undefined
+    )
 
+    ----------------------------------
+    -- Convert Colors and Values
+    ----------------------------------
+
+    -- Invert 0.0 to 1.0 or inverse 
+    fn InvertValue val =
+    (
+        return 1.0 - val
+    )
+
+    -- Remap color values 255 to 0-1 range
+    fn MapToUnitRange val =
+    (
+        return val / 255.0
+    )
+
+    -- Remap HDR Colors from range 0-1 to 0-255
+    fn RemapHDRtoRGB colorHdr cSpace =
+    (
+        colorRed = if colorHdr[1] > 1.0 then 1.0 else colorHdr[1]
+        colorGreen = if colorHdr[2] > 1.0 then 1.0 else colorHdr[2]
+        colorBlue = if colorHdr[3] > 1.0 then 1.0 else colorHdr[3]
+
+        -- sRGB Color Space
+        if cSpace == 0 then
+        (
+            colorRed = pow colorRed 2.2 * 255.0
+            colorGreen = pow colorGreen 2.2 * 255.0
+            colorBlue = pow colorBlue 2.2 * 255.0
+        )
+
+        -- Linear Color Space
+        if cSpace == 1 or cSpace == 2 then
+        (
+            colorRed = colorRed * 255.0
+            colorGreen = colorGreen * 255.0
+            colorBlue = colorBlue * 255.0
+
+            -- FIXME: Rendering Color Space (cSpace: 2)
+        )
+
+        return (color colorRed colorGreen colorBlue)
+    )
+
+    -- Convert Temperature to RGB
+    fn KelvinToRGB tempKelvin =
+    (
+        temperature = tempKelvin / 100.0
+
+        if temperature <= 66.0 then
+        (
+            colorRed = 255
+            colorGreen = (99.4708025861 * log temperature) - 161.1195681661
+            colorBlue = if temperature <= 19.0 then 0 else ((138.5177312231 * log (temperature - 10)) - 305.0447927307)
+        )
+        else
+        (
+            colorRed = (329.698727446 * ((temperature - 60) ^ -0.1332047592))
+            colorGreen = (288.1221695283 * ((temperature - 60) ^ -0.0755148492))
+            colorBlue = 255
+        )
+
+        colorRed = amax (amin colorRed 255) 0
+        colorGreen = amax (amin colorGreen 255) 0
+        colorBlue = amax (amin colorBlue 255) 0
+
+        return (color colorRed colorGreen colorBlue)
+    )
+
+    -- Convert HEX to RGB
+    fn HexToRGB hexColor =
+    (
+        -- Remove the "#" if it exists
+        hexColor = substituteString hexColor "#" ""
+
+        -- Convert HEX components to decimal
+        colorRed = (execute ("0x" + (substring hexColor 1 2))) as float / 255.0
+        colorGreen = (execute ("0x" + (substring hexColor 3 2))) as float / 255.0
+        colorBlue = (execute ("0x" + (substring hexColor 5 2))) as float / 255.0
+
+        -- Apply gamma correction for sRGB
+        colorRed = pow colorRed 2.2 * 255.0
+        colorGreen = pow colorGreen 2.2 * 255.0
+        colorBlue = pow colorBlue 2.2 * 255.0
+
+        return (color colorRed colorGreen colorBlue)
+    )
+
+    -- Gamma 1.0 to 2.2 or inverse 
+    fn ApplyGammaToColors colorValue gammaValue = 
+    (
+        local colorRed = 255.0 * ( (colorValue.r / 255.0) ^ gammaValue )
+        local colorGreen = 255.0 * ( (colorValue.g / 255.0) ^ gammaValue )
+        local colorBlue = 255.0 * ( (colorValue.b / 255.0) ^ gammaValue )
+    
+        return (color colorRed colorGreen colorBlue)
+    )
+
+    -- Convert Color Nodes if no Bitmap
+    fn ConvertColorNodes bitmapNode =
+    (
+        if bitmapNode != undefined then
+        (
+            if renderEngine == "Vray" then
+            (
+                for foundNode in (getClassInstances VRayColor target:bitmapNode) do 
+                (
+                    if foundNode.color_gamma == 1.0 then 
+                    (
+                        return foundNode.color 
+                    )
+                    else
+                    (
+                        return ApplyGammaToColors foundNode.color foundNode.color_gamma
+                    )
+                )
+            )
+    
+            if renderEngine == "Corona" then
+            (
+                for foundNode in (getClassInstances CoronaColor target:bitmapNode) do
+                (
+                    -- Input: Solid Color
+                    if foundNode.method == 0 then return foundNode.color
+    
+                    -- Input: Solid HDR Color
+                    if foundNode.method == 1 then return RemapHDRtoRGB foundNode.colorHdr foundNode.colorSpace
+    
+                    -- Input: Kelvin Temperature
+                    if foundNode.method == 2 then return KelvinToRGB foundNode.temperature 
+    
+                    -- Input: Hex Color
+                    if foundNode.method == 3 then return HexToRGB foundNode.hexColor 
+                ) 
+            )
+        )
         return undefined
     )
 
     ----------------------------------
     -- Convert Materials
-    ----------------------------------
+    ---------------------------------- 
+
+    -- Convert files to jpg if not jpg or png
+    fn ConvertBitmapToJpg currentBitmap =
+    (
+        bitmapFileName = currentBitmap.filename
+        bitmapFileTypes = #(".jpg", ".jpeg", ".png")
+        fileExtension = getFilenameType bitmapFileName
+        if findItem bitmapFileTypes fileExtension == 0 do 
+        (
+            try(originalBitmap = openBitmap bitmapFileName)catch()
+            if (originalBitmap != undefined and isKindOf originalBitmap bitmap) then
+            (
+                newBitmapFilename = (getFilenamePath bitmapFileName + getFilenameFile bitmapFileName + ".jpg")
+                if doesFileExist newBitmapFilename then
+                (
+                    currentBitmap.filename = newBitmapFilename
+                )
+                else
+                (
+                    print ("Converting Non-Compliant GLB Texture:" + (filenameFromPath bitmapFileName))
+                    newBitmap = bitmap originalBitmap.width originalBitmap.height
+                    pasteBitmap originalBitmap newBitmap [0,0] [0,0]
+                    newBitmap.filename = newBitmapFilename
+                    save newBitmap
+                    close newBitmap
+                    close originalBitmap
+                    free newBitmap
+                    free originalBitmap
+            
+                    currentBitmap.filename = newBitmap.filename
+                )
+            )
+        )
+    )
+
+    -- Invert Bitmap white -> black or visa versa
+    fn InvertGlossinessTextures glossMap =
+    (
+        invertedFileName = (getFilenamePath glossMap + getFilenameFile glossMap + "_inverted" + getFilenameType glossMap)
+        if doesFileExist invertedFileName then 
+        (
+            return invertedFileName
+        )
+        else
+        (
+            print ("Converting Glossiness Texture: " + (filenameFromPath glossMap))
+            try(originalBitmap = openBitmap glossMap)catch()
+            if (originalBitmap != undefined and isKindOf originalBitmap bitmap) then
+            (
+                invertedBitmap = copy originalBitmap
+                for y = 0 to (invertedBitmap.height - 1) do
+                (
+                    pixels = getPixels invertedBitmap [0, y] invertedBitmap.width
+                    for i = 1 to pixels.count do
+                    (
+                        pixels[i] = color (255 - pixels[i].r) (255 - pixels[i].g) (255 - pixels[i].b)
+                    )
+                    setPixels invertedBitmap [0, y] pixels
+                )
+            
+                invertedFileName = (getFilenamePath glossMap + getFilenameFile glossMap + "_inverted" + getFilenameType glossMap)
+                invertedBitmap.filename = invertedFileName
+                save invertedBitmap
+                close invertedBitmap
+                close originalBitmap
+                free invertedBitmap
+                free originalBitmap
+        
+                return invertedFileName
+            ) 
+        )
+        return undefined
+    )
 
     -- Replaces the found bitmap from Corona/Vray to GLTF node (eg. BaseColor or Rough)
     fn ReplaceGLTFBitmap materialName materialMap bitmapNode bitmapType gammaValue gltfCompliant = 
@@ -212,7 +451,9 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Function to convert Corona or VrayMtl to glTF material 
     fn ConvertToGltf currentMaterial = 
     ( 
-        RepathFoundAssets() -- Re-path bitmaps to "Found" location, must be executed after converting Engine specific to standard bitmaps
+        -- Re-path bitmaps to "Found" location, must be executed after converting Engine specific 
+        -- to standard bitmaps
+        RepathFoundAssets() 
 
         -- Basic settings for GLTF shader 
         newMaterial = undefined
@@ -232,43 +473,79 @@ Icon:"MassFX\CreateHingeConstraint"
             messageBox ("Your 3dsmax version does not support GLTF.\n3dsmax 2023+ Required.")
             return undefined
         )
-        
-        -- Set material nodes based on render engine
-        diffuseNode = undefined
-        roughNode = undefined
-        bumpNode = undefined
-        normalNode = undefined
-        metalNode = undefined
-        alphaNode = undefined
-        emissionNode = undefined
-        occlusionNode = undefined
 
         if renderEngine == "Corona" then
         (
             diffuseNode = currentMaterial.baseTexmap
+            diffuseColor = currentMaterial.baseColor 
             roughNode = currentMaterial.baseRoughnessTexmap
+            roughValue = currentMaterial.baseRoughness
+            roughBrdf = currentMaterial.roughnessMode
+            if roughBrdf == 0 then roughBrdf = true else roughBrdf = false
             bumpNode = currentMaterial.baseBumpTexmap
             try(normalNode = currentMaterial.baseBumpTexmap.normalMap)catch()
             metalNode = currentMaterial.metalnessTexmap
+            metalValue = currentMaterial.metalnessMode -- == 1
             alphaNode = currentMaterial.opacityTexmap
             emissionNode = currentMaterial.selfIllumTexmap
+            emissionValue = currentMaterial.selfIllumLevel
+            emissionColor = currentMaterial.selfIllumColor
+            sheenNode = currentMaterial.sheenColorTexmap
+            sheenValue = currentMaterial.sheenAmount
+            sheenColor = currentMaterial.sheenColor
+            sheenRoughNode = currentMaterial.sheenRoughnessTexmap
+            sheenRoughValue = currentMaterial.sheenRoughness
+            clearCoatNode = currentMaterial.clearcoatAmountTexmap
+            clearCoatValue = currentMaterial.clearcoatAmount
+            clearCoatRoughNode = currentMaterial.clearcoatRoughnessTexmap
+            clearCoatRoughValue = currentMaterial.clearcoatRoughness
+            clearCoatBumpNode = currentMaterial.clearcoatBumpTexmap
+            try(clearCoatNormalNode = currentMaterial.clearcoatBumpTexmap.normalMap)catch()
+            clearCoatNormalValue = currentMaterial.clearcoatBumpMapAmount
+            transmissionNode = currentMaterial.refractionAmountTexmap
+            transmissionValue = currentMaterial.refractionAmount
+            transmissionRoughValue = currentMaterial.baseRoughness
         )
 
         if renderEngine == "Vray" then
         (
             diffuseNode = currentMaterial.texmap_diffuse
+            diffuseColor = currentMaterial.Diffuse
             roughNode = currentMaterial.texmap_reflectionGlossiness
+            roughValue = currentMaterial.reflection_glossiness
+            roughBrdf = currentMaterial.brdf_useRoughness
             bumpNode = currentMaterial.texmap_bump
             try(normalNode = currentMaterial.texmap_bump.normal_map)catch()
             metalNode = currentMaterial.texmap_metalness
+            metalValue = currentMaterial.reflection_metalness
             alphaNode = currentMaterial.texmap_opacity
             emissionNode = currentMaterial.texmap_self_illumination
+            emissionValue = currentMaterial.selfIllumination_multiplier
+            emissionColor = currentMaterial.selfIllumination
+            sheenNode = currentMaterial.texmap_sheen
+            sheenColor = currentMaterial.sheen_color
+            sheenRoughNode = currentMaterial.texmap_sheen_glossiness
+            sheenRoughValue = currentMaterial.sheen_glossiness
+            clearCoatNode = currentMaterial.texmap_coat_amount
+            clearCoatValue = currentMaterial.coat_amount
+            clearCoatRoughNode = currentMaterial.texmap_coat_glossiness
+            clearCoatRoughValue = currentMaterial.coat_glossiness
+            clearCoatBumpNode = currentMaterial.texmap_coat_bump
+            try(clearCoatNormalNode = currentMaterial.texmap_coat_bump.normal_map)catch() 
+            clearCoatNormalValue = currentMaterial.texmap_coat_bump_multiplier
+            transmissionNode = currentMaterial.texmap_refraction
+            transmissionValue = MapToUnitRange currentMaterial.Refraction.value
+            transmissionRoughValue = currentMaterial.refraction_glossiness
+            transmissionVolumeThickMap = currentMaterial.texmap_refraction_fog_depth
+            reflectionValue = currentMaterial.Reflection.value
         )
-
 
         -- Search directory for textures
         if findTextures == true then
         (
+            -- If findTextures = true then foundDiffuse should be the bitmap found in the directory
+            -- if findTextures = false then gltfDiffuse will search the diffuseNode tree for a bitmap
+
             foundDiffuse = SearchBitmapNodes currentMaterial diffuseNode "Diffuse"
             if foundDiffuse != undefined then diffuseNode = foundDiffuse
 
@@ -281,7 +558,7 @@ Icon:"MassFX\CreateHingeConstraint"
             foundEmission = SearchBitmapNodes currentMaterial emissionNode "Emission"
             if foundEmission != undefined then emissionNode = foundEmission
 
-            foundOcclusion = SearchBitmapNodes currentMaterial undefined "Occlusion"
+            foundOcclusion = SearchBitmapNodes currentMaterial occlusionNode "Occlusion"
             if foundOcclusion != undefined then occlusionNode = foundOcclusion
 
             foundNormal = SearchBitmapNodes currentMaterial normalNode "Normal"
@@ -289,19 +566,85 @@ Icon:"MassFX\CreateHingeConstraint"
 
             foundAlpha = SearchBitmapNodes currentMaterial alphaNode "Alpha"
             if foundAlpha != undefined then alphaNode = foundAlpha
+
+            foundSheen = SearchBitmapNodes currentMaterial sheenNode "Sheen"
+            if foundSheen != undefined then sheenNode = foundSheen
+
+            foundSheenRough = SearchBitmapNodes currentMaterial sheenRoughNode "SheenRoughness"
+            if foundSheenRough != undefined then sheenRoughNode = foundSheenRough
+
+            foundClearCoatNode = SearchBitmapNodes currentMaterial clearCoatNode "ClearCoat"
+            if foundClearCoatNode != undefined then clearCoatNode = foundClearCoatNode
+
+            foundClearCoatRoughNode = SearchBitmapNodes currentMaterial clearCoatRoughNode "ClearCoatRoughness"
+            if foundClearCoatRoughNode != undefined then clearCoatRoughNode = foundClearCoatRoughNode
+
+            foundClearCoatNormal = SearchBitmapNodes currentMaterial clearCoatNormalNode "ClearCoatNormal"
+            if foundClearCoatNormal != undefined then clearCoatNormalNode = foundClearCoatNormal
+
+            -- TODO: Maybe include search for Transmission & Volume Thickness
+        )
+
+        -- BRDF
+        if renderEngine == "Vray" and roughBrdf == false then 
+        (
+            roughValue = InvertValue roughValue
+            sheenRoughValue = InvertValue sheenRoughValue
+            clearCoatRoughValue = InvertValue clearCoatRoughValue
         )
         
         -- Diffuse 
         gltfDiffuse = ReplaceGLTFBitmap newMaterial.name newMaterial.baseColorMap diffuseNode "Diffuse" 2.2 "Required"
         if gltfDiffuse != undefined then newMaterial.baseColorMap = gltfDiffuse
 
+        if gltfDiffuse == undefined and isKindOf diffuseColor color then
+        (
+            -- Search for ColorNode in tree
+            foundColorNode = ConvertColorNodes diffuseNode
+            if foundColorNode != undefined then
+            (
+                newMaterial.baseColor = foundColorNode
+            )
+            else
+            (
+                newMaterial.baseColor = diffuseColor
+            )
+        )
+
         -- Roughness 
         gltfRough = ReplaceGLTFBitmap newMaterial.name newMaterial.roughnessMap roughNode "Roughness" 1.0 "Required"
         if gltfRough != undefined then newMaterial.roughnessMap = gltfRough   
+
+        if gltfRough == undefined and roughValue != undefined then
+        ( 
+            newMaterial.roughness = roughValue
+        )
+
+        -- Glossiness Texture Conversion
+        if convertGlossinessMaps == true and roughBrdf == false and gltfRough != undefined then
+        (
+            invertedBitmapPath = InvertGlossinessTextures gltfRough.filename
+            if invertedBitmapPath != undefined then
+            (
+                newMaterial.roughnessMap.filename = invertedBitmapPath 
+            ) 
+        )
         
         -- Metalness
         gltfMetal = ReplaceGLTFBitmap newMaterial.name newMaterial.metalnessMap metalNode "Metalness" 1.0 "Required"
         if gltfMetal != undefined then newMaterial.metalnessMap = gltfMetal 
+
+        if gltfMetal == undefined then
+        (
+            if renderEngine == "Vray" and metalValue > 0 then
+            (
+                newMaterial.metalness = metalValue
+            )
+            if renderEngine == "Corona" and metalValue == 1 then
+            (
+                newMaterial.metalness = 1.0
+            )
+        )
 
         -- Normal 
         gltfNormal = ReplaceGLTFBitmap newMaterial.name newMaterial.normalMap normalNode "Normal" 1.0 "Required"
@@ -318,11 +661,31 @@ Icon:"MassFX\CreateHingeConstraint"
         gltfOcclusion = ReplaceGLTFBitmap newMaterial.name newMaterial.ambientOcclusionMap occlusionNode "Occlusion" 1.0 "Required"
         if gltfOcclusion != undefined then newMaterial.ambientOcclusionMap = gltfOcclusion 
 
-        -- Optional textures
+        -- Optional Textures -- 
 
         -- Emission 
         gltfEmission = ReplaceGLTFBitmap newMaterial.name newMaterial.emissionMap emissionNode "Emission" 2.2 "Optional"
         if gltfEmission != undefined then newMaterial.emissionMap = gltfEmission 
+
+        if gltfEmission == undefined then
+        (
+            foundColorNode = ConvertColorNodes emissionNode
+            if foundColorNode != undefined then
+            (
+                newMaterial.emissionColor = foundColorNode
+            )
+            else
+            (
+                if renderEngine == "Vray" and emissionColor != (color 0 0 0) then
+                (
+                    newMaterial.emissionColor = emissionColor
+                )
+                if renderEngine == "Corona" and emissionValue > 0 then
+                (
+                    newMaterial.emissionColor = emissionColor
+                )
+            )
+        )
                 
         -- Alpha 
         gltfAlpha = ReplaceGLTFBitmap newMaterial.name newMaterial.AlphaMap alphaNode "Alpha" 1.0 "Optional"
@@ -330,14 +693,264 @@ Icon:"MassFX\CreateHingeConstraint"
 
         if newMaterial.AlphaMap != undefined then
         (
-            newMaterial.alphaMode = 2	-- Mask mode 
-            newMaterial.alphaCutoff = 1.0 
+            newMaterial.alphaMode = 3	-- Blend mode 
+            -- newMaterial.alphaCutoff = 1.0 
         )
 
-        ----------------------------------
-        -- Rename GLTF Maps
-        ----------------------------------
+        -- Sheen
+        gltfSheen = ReplaceGLTFBitmap newMaterial.name newMaterial.sheenColorMap sheenNode "Sheen" 2.2 "Optional"
+        if gltfSheen != undefined then
+        (
+            newMaterial.enableSheen = on
+            newMaterial.sheenColorMap = gltfSheen
+        ) 
+        
+        -- Sheen Roughness
+        gltfSheenRough = ReplaceGLTFBitmap newMaterial.name newMaterial.sheenRoughnessMap sheenRoughNode "SheenRoughness" 1.0 "Optional"
+        if gltfSheenRough != undefined then
+        (
+            newMaterial.enableSheen = on
+            newMaterial.sheenRoughnessMap = gltfSheenRough
+        ) 
 
+        -- Sheen value should be 1.0 unless user has changed defaults
+        if renderEngine == "Vray" and sheenColor != (color 0 0 0) then
+        (
+            newMaterial.enableSheen = on
+            newMaterial.sheenColor = sheenColor
+
+            if gltfSheenRough == undefined then
+            (
+                newMaterial.sheenRoughness = sheenRoughValue
+            )
+        )
+        if renderEngine == "Corona" and sheenValue > 0 then
+        (
+            if gltfSheen == undefined then 
+            (
+                newMaterial.enableSheen = on
+                newMaterial.sheenColor = sheenColor
+                
+                if gltfSheenRough == undefined then
+                (
+                    newMaterial.sheenRoughness = sheenRoughValue
+                )
+            )  
+        )
+
+        -- Sheen Color (Node)
+        if gltfSheen == undefined then
+        (
+            foundColorNode = ConvertColorNodes sheenNode
+            if foundColorNode != undefined then 
+            (
+                newMaterial.enableSheen = on
+                newMaterial.sheenColor = foundColorNode
+            )
+        )
+
+        -- Clear Coat
+        gltfClearCoat = ReplaceGLTFBitmap newMaterial.name newMaterial.clearcoatMap clearCoatNode "ClearCoat" 2.2 "Optional"
+        if gltfClearCoat != undefined then
+        (
+            newMaterial.enableClearCoat = on
+            newMaterial.clearcoatMap = gltfClearCoat
+        ) 
+
+        -- Clear Coat value should be 1.0 if using bitmap, otherwise set value if above 0.0
+        if gltfClearCoat == undefined and clearCoatValue > 0 then 
+        (
+            newMaterial.enableClearCoat = on
+            newMaterial.clearcoat = clearCoatValue
+        )
+
+        -- Clear Coat Roughness
+        gltfClearCoatRough = ReplaceGLTFBitmap newMaterial.name newMaterial.clearcoatRoughnessMap clearCoatRoughNode "ClearCoatRoughness" 1.0 "Optional"
+        if gltfClearCoatRough != undefined then
+        (
+            newMaterial.enableClearCoat = on
+            newMaterial.clearcoatRoughnessMap = gltfClearCoatRough
+        ) 
+
+        -- Value should be 1.0 if using bitmap, otherwise set value if above 0.0
+        if gltfClearCoatRough == undefined and clearCoatValue > 0 then 
+        (
+            newMaterial.enableClearCoat = on
+            newMaterial.clearcoatRoughness = clearCoatRoughValue
+        )
+
+        -- Clear Coat Normal
+        gltfClearCoatNormal = ReplaceGLTFBitmap newMaterial.name newMaterial.clearcoatNormalMap clearCoatNormalNode "ClearCoatNormal" 1.0 "Optional"
+        if gltfClearCoatNormal != undefined then
+        (
+            newMaterial.enableClearCoat = on
+            newMaterial.clearcoatNormalMap = gltfClearCoatNormal
+        ) 
+        
+        if newMaterial.clearcoatNormalMap == undefined then
+        (
+            -- Bump (Not GLTF compliant)
+            gltfClearCoatNormal = ReplaceGLTFBitmap newMaterial.name newMaterial.clearcoatNormalMap clearCoatBumpNode "ClearCoatNormal" 1.0 "Optional"
+            if gltfClearCoatNormal != undefined then newMaterial.clearcoatNormalMap = gltfClearCoatNormal 
+        )
+
+        -- Value should be 1.0 unless user has changed defaults
+        if newMaterial.enableClearCoat == on and newMaterial.clearcoatNormalMap != undefined then
+        (
+            if renderEngine == "Vray" and clearCoatNormalValue != 30.0 then
+            (
+                newMaterial.clearcoatNormal = clearCoatNormalValue / 100.0
+            )
+            if renderEngine == "Corona" and clearCoatNormalValue != 1.0 then
+            (
+                newMaterial.clearcoatNormal = clearCoatNormalValue
+            )
+        )
+
+        -- Transmission
+        if glassToTransmission == true then
+        (
+            if transmissionValue > 0 or (renderEngine == "Corona" and currentMaterial.useThinMode == true) then 
+            (
+                newMaterial.enableTransmission = on
+                newMaterial.transmission = transmissionValue 
+
+                gltfTransmission = ReplaceGLTFBitmap newMaterial.name newMaterial.transmissionMap transmissionNode "Transmission" 1.0 "Optional"
+                if gltfTransmission != undefined then
+                (
+                    newMaterial.enableTransmission = on
+                    newMaterial.transmissionMap = gltfTransmission
+                )
+    
+                -- If no roughness texture, adjust glass roughness value
+                if newMaterial.roughnessMap == undefined then
+                (
+                    if renderEngine == "Vray" then
+                    (
+                        -- Use Refaction Glossiness value first
+                        if transmissionRoughValue != 1 then
+                        (
+                            if roughBrdf == false then transmissionRoughValue = InvertValue transmissionRoughValue
+                            newMaterial.roughness = transmissionRoughValue
+                        )
+                        -- Use Reflection Glossiness value second, if Refraction Glossiness is 1.0
+                        if transmissionRoughValue == 1 and roughValue != 1 then
+                        (
+                            newMaterial.roughness = roughValue
+                        )
+                    )
+                    if renderEngine == "Corona" and transmissionRoughValue != 0 then
+                    (
+                        newMaterial.roughness = transmissionRoughValue
+                    )
+                )
+
+                -- Transmission Volume
+                if renderEngine == "Vray" then
+                (
+                    -- Translucency
+                    if currentMaterial.refraction_fogDepth > 0 then
+                    (
+                        newMaterial.enableVolume = on
+                        newMaterial.volumeThickness = 1
+                        newMaterial.volumeDistance = 1
+                        newMaterial.volumeColor = currentMaterial.refraction_fogColor
+
+                        gltfVolumeThickMap = ReplaceGLTFBitmap newMaterial.name newMaterial.volumeThicknessMap transmissionVolumeThickMap "transmissionVolumeThickMap" 1.0 "Optional"
+                        if gltfVolumeThickMap != undefined then newMaterial.volumeThicknessMap = gltfVolumeThickMap 
+                    
+                        if currentMaterial.texmap_refraction_fog != undefined then
+                        (
+                            foundColorNode = ConvertColorNodes currentMaterial.texmap_refraction_fog
+                            if foundColorNode != undefined then
+                            (
+                                newMaterial.volumeColor = foundColorNode
+                            )
+                        )
+                    )
+                )
+
+                if renderEngine == "Corona" then
+                (
+                    -- Media options > Volumetric Scattering
+                    if currentMaterial.attenuationDistance > 0 and currentMaterial.useThinMode == false then
+                    (
+                        newMaterial.enableVolume = on
+                        newMaterial.volumeThickness = 1
+                        newMaterial.volumeDistance = 1
+                        newMaterial.volumeColor = currentMaterial.volumetricScatteringColor
+
+                        if currentMaterial.volumetricScatteringTexmap != undefined then
+                        (
+                            foundColorNode = ConvertColorNodes currentMaterial.volumetricScatteringTexmap
+                            if foundColorNode != undefined then
+                            (
+                                newMaterial.volumeColor = foundColorNode
+                            )
+                        ) 
+                    )
+
+                    -- Thin Shell > Translucency
+                    if currentMaterial.useThinMode == on and currentMaterial.translucencyFraction > 0 then
+                    (
+                        newMaterial.enableVolume = on
+                        newMaterial.volumeThickness = 1
+                        newMaterial.volumeDistance = 1
+                        newMaterial.volumeColor = currentMaterial.translucencyColor
+                        newMaterial.transmission = currentMaterial.translucencyFraction
+    
+                        if currentMaterial.translucencyColorTexmap != undefined then
+                        (
+                            foundColorNode = ConvertColorNodes currentMaterial.translucencyColorTexmap
+                            if foundColorNode != undefined then
+                            (
+                                newMaterial.volumeColor = foundColorNode
+                            )
+                        ) 
+                    )
+
+                    -- Thin Shell > Refraction Thin Absorption
+                    if currentMaterial.useThinMode == on and (currentMaterial.refractionAmount == 1 or transmissionNode != undefined) then
+                    (
+                        newMaterial.enableVolume = on
+                        newMaterial.volumeThickness = 1
+                        newMaterial.volumeDistance = 1
+                        newMaterial.volumeColor = currentMaterial.thinAbsorptionColor
+                        newMaterial.transmission = 1
+        
+                        if currentMaterial.thinAbsorptionTexmap != undefined then
+                        (
+                            foundColorNode = ConvertColorNodes currentMaterial.thinAbsorptionTexmap
+                            if foundColorNode != undefined then
+                            (
+                                newMaterial.volumeColor = foundColorNode
+                            )
+                        ) 
+                    )
+                )
+
+                -- Glass Assumptions
+                if renderEngine == "Vray" then
+                (
+                    -- No diffuse texture, diffuse color is black-ish, refract and reflect values are high 
+                    if gltfDiffuse == undefined and diffuseColor.value < 45.0 and reflectionValue > 125.0 and transmissionValue > 0.8 then
+                    (
+                        newMaterial.baseColor = (color 255 255 255)
+                    )
+                )
+                if renderEngine == "Corona" then
+                (
+                    if gltfDiffuse == undefined and diffuseColor.value < 128.0 and transmissionValue > 0.8 then
+                    (
+                        newMaterial.baseColor = (color 255 255 255)
+                    )
+                )
+            )
+        )
+
+        -- Additional "Optional" maps should also be added to SearchBitmapNodes() else statement so they are not flagged as missing
+
+        -- Rename GLTF Maps
         if renameGltfMaps == true then
         (
             try(newMaterial.baseColorMap.name = "Base Color")catch()
@@ -347,16 +960,34 @@ Icon:"MassFX\CreateHingeConstraint"
             try(newMaterial.emissionMap.name = "Emission")catch()
             try(newMaterial.ambientOcclusionMap.name = "Occlusion")catch()
             try(newMaterial.normalMap.name = "Normal")catch()
+            try(newMaterial.sheenColorMap.name = "Sheen")catch()
+            try(newMaterial.sheenRoughnessMap.name = "SheenRoughness")catch()
+            try(newMaterial.clearcoatMap.name = "ClearCoat")catch()
+            try(newMaterial.clearcoatRoughnessMap.name = "ClearCoatRoughness")catch()
+            try(newMaterial.clearcoatNormalMap.name = "ClearCoatNormal")catch()
+            try(newMaterial.transmissionMap.name = "Transmission")catch()
+            try(newMaterial.volumeThicknessMap.name = "VolumeThickness")catch()
+        )
+
+        -- Convert bitmaps to glb compliant
+        if convertGlbCompliant == true then
+        (
+            for i in getClassInstances bitmaptexture target:newMaterial do  
+            (  
+                if i != undefined then ConvertBitmapToJpg i
+            ) 
         )
                     
         -- Convert textures 
         return newMaterial
     ) 
 
-    ---------- Vray Section ----------
+    ----------------------------------
+    -- Vray Section
+    ----------------------------------
 
     -- Convert Vray Bitmaps to Standard Bitmaps
-    fn convertVrayBitamps =
+    fn ConvertVrayBitamps =
     (
         for i in getClassInstances VRayBitmap target:theTarget do  
         (  
@@ -371,7 +1002,7 @@ Icon:"MassFX\CreateHingeConstraint"
     )
 
     -- Convert Vray Materials to GLTF
-    fn convertVrayMtls =
+    fn ConvertVrayMtls =
     (
         for i in getClassInstances VRayMtl target:theTarget do 
         (
@@ -381,7 +1012,7 @@ Icon:"MassFX\CreateHingeConstraint"
     )
 
     -- Replace any Vray material type if a child material is GLTF
-    fn convertVrayClasses =
+    fn ConvertVrayClasses =
     (
         for i in material.classes do
         (
@@ -403,10 +1034,12 @@ Icon:"MassFX\CreateHingeConstraint"
         )
     )
 
-    ---------- Corona Section ----------
+    ----------------------------------
+    -- Corona Section
+    ----------------------------------
 
     -- Convert Corona Bitmaps to Standard Bitmaps
-    fn convertCoronaBitmaps =
+    fn ConvertCoronaBitmaps =
     (
         for i in getClassInstances CoronaBitmap target:theTarget do  
         (  
@@ -421,7 +1054,7 @@ Icon:"MassFX\CreateHingeConstraint"
     )
 
     -- Replace Corona Front/Back texmap with Front Face Side 
-    fn convertCoronaFrontSide = 
+    fn ConvertCoronaFrontSide = 
     (
         for i in getClassInstances CoronaFrontBack target:theTarget do 
         (
@@ -433,7 +1066,7 @@ Icon:"MassFX\CreateHingeConstraint"
     )
 
     -- Convert Corona Materials to GLTF
-    fn convertCoronaMtls = 
+    fn ConvertCoronaMtls = 
     (
         for i in getClassInstances CoronaPhysicalMtl target:theTarget do 
         (
@@ -443,7 +1076,7 @@ Icon:"MassFX\CreateHingeConstraint"
     )
 
     -- Replace any Corona material type if a child material is GLTF
-    fn convertCoronaClasses = 
+    fn ConvertCoronaClasses = 
     (
         for i in material.classes do
         (
@@ -475,21 +1108,20 @@ Icon:"MassFX\CreateHingeConstraint"
         (
             renderEngine = "Vray"
 
-            convertVrayBitamps()
-            convertVrayMtls()
-            convertVrayClasses()
+            ConvertVrayBitamps()
+            ConvertVrayMtls()
+            ConvertVrayClasses()
         )
         
         if matchPattern (renderers.current as string) pattern:"*Corona*" then
         (
             renderEngine = "Corona"
 
-            convertCoronaBitmaps()
-            convertCoronaFrontSide()
-            convertCoronaMtls()
-            convertCoronaClasses()
-        )
-
+            ConvertCoronaBitmaps()
+            ConvertCoronaFrontSide()
+            ConvertCoronaMtls()
+            ConvertCoronaClasses()
+        ) 
         ForceCompleteRedraw()  
     )
 
@@ -502,26 +1134,24 @@ Icon:"MassFX\CreateHingeConstraint"
                 print i 
             ) 
         
-            if not hideWarningPopups then
+            if hideWarningPopups == false then
             (
                 messageBox ("Some of your materials are missing textures. Check the MAXScript Listener for details.") 
             )
         ) 
-        -- free the array from memory, aka garbage collect it 
         free missingTex 
-        
-        -- Refresh asset tracker 
         ATSOps.Refresh() 
     )
     
     ----------------------------------
     -- Remove Subdivision Modifiers
     ----------------------------------
+
+    -- Check if any of the modifiers are OpenSubdiv, TurboSmooth, or MeshSmooth 
     fn RemoveSubdivions = 
     (
         for obj in objects do 
         ( 
-            -- Check if any of the modifiers are OpenSubdiv, TurboSmooth, or MeshSmooth 
             for mod in obj.modifiers do 
             ( 
                 if (mod.name == "OpenSubdiv" or mod.name == "TurboSmooth" or mod.name == "MeshSmooth") do 
@@ -571,12 +1201,9 @@ Icon:"MassFX\CreateHingeConstraint"
         -- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count 
         for mat in getClassInstances MultiMaterial target:rootnode do 
         ( 
-            -- Variable to track the maximum bitmap count 
             maxCount = 0  
-            -- Variable to store the material with the maximum bitmap count 
             maxMaterial = undefined  
                     
-            -- Loop through sub-materials of the multi-sub material 
             for subMatIndex = 1 to mat.numsubs do 
             ( 
                 subMat = mat[subMatIndex] 
@@ -634,14 +1261,16 @@ Icon:"MassFX\CreateHingeConstraint"
         if removeGlbLogFile then deleteFile (exportToGLBFile + ".log")
     )
 
-    ---------- Rollout UI ----------
+    ----------------------------------
+    -- Rollout UI
+    ----------------------------------
 
     try(cui.UnRegisterDialogBar CoronaVrayToGLB)catch()
     try(DestroyDialog CoronaVrayToGLB)catch()
     
     rollout CoronaVrayToGLB ("Corona Vray To GLB " + scriptVersion)
     (
-        ---------- UI Layout ----------
+        -- UI Layout
 
         group "GLB Export Directory"
         (
@@ -651,12 +1280,15 @@ Icon:"MassFX\CreateHingeConstraint"
 
         group "Settings"
         (
-            checkbox chk_findTex "Find Missing Bitmaps" checked:true tooltip:"Search the directory for missing bitmaps. Example: If you have Sofa_BaseColor.png it will find Sofa_Occlusion.png if its in the same directory and bitmap prefix is the same, \"Sofa\" in this example. You must have at least one bitmap in the material"
+            checkbox chk_findTex "Find Missing Bitmaps" checked:true tooltip:"Search the directory for missing bitmaps. Example: If you have Sofa_BaseColor.png it will find Sofa_Occlusion.png if its in the same directory and bitmap prefix is the same, \"Sofa\" in this example. You must have at least one bitmap in the material."
+            checkbox chk_glassToTrans "Convert Glass to Transmission" checked:true tooltip:"Enables Transmission for any material using Refraction.\n\nNOTE: Double check your glass materials since they may be set up in an unusual way originally."
+            checkbox chk_GlbCompliant "Convert Textures to GLB Compliant" checked:true tooltip:"Converts bitmaps that are not compliant with GLB to .jpg (example .tif)"
+            checkbox chk_invertGloss "Convert Glossiness Textures (slow)" checked:true tooltip:"Converts Glossiness Textures to Roughness textures.\n\nIf you already use Roughness workflow and textures then disable this.\n\nWARNING: This can take awhile since it needs to rebuild those bitmaps, renamed as texturename_inverted."
             checkbox chk_renameGltfMaps "Rename GLTF Maps" checked:true tooltip:"Renames GLTF Map nodes. Example: Base Color name = \"Base Color\" instead of \"Map #1\" or whatever you had previously"
             checkbox chk_rmLog "Remove GLB .log file" checked:true tooltip:"Deletes the .log file saved in the same directory as the .glb file after export"
             checkbox chk_rmSubdiv "Remove Subdivision Modifiers" checked:true tooltip:"Removes Modifiers Opensubdiv, Turbosmooth, Meshsmooth"
-            checkbox chk_rmMultiSub "Collapse Multi-Sub Materials" tooltip:"WARNING: Replaces all materials in the Multi-Sub with the sub-material with the highest texture count. USE WITH CAUTION!"
-            checkbox chk_hWarnings "Hide Warning Popups (Missing Textures)" tooltip:"Disables pop up messages regaring missing textures in materials. Still prints to maxscript listener for debugging"
+            checkbox chk_rmMultiSub "Collapse Multi-Sub Materials" checked:false tooltip:"WARNING: Replaces all materials in the Multi-Sub with the sub-material with the highest texture count.\n\nRecommended not to use this as its specific to my workflow. USE WITH CAUTION!"
+            checkbox chk_hWarnings "Hide Warning Popups (Missing Textures)" checked:false tooltip:"Disables pop up messages regarding missing textures in materials. Still prints to maxscript listener for debugging"
         )
 
         group "Convert Materials"
@@ -689,7 +1321,7 @@ Icon:"MassFX\CreateHingeConstraint"
             hyperlink hyp_donate "Donate" align:#left color:(color 92 216 157) hovercolor:(color 0 150 150) visitedcolor:(color 0 200 200) address:"https://www.paypal.com/donate/?hosted_button_id=GL9MAY2KZVJBC" 
         )
 
-        ---------- UI Functions ----------
+        -- UI Functions
 
         -- Open UI --
         on CoronaVrayToGLB open do
@@ -701,17 +1333,21 @@ Icon:"MassFX\CreateHingeConstraint"
                 while not eof fStream do  
                 (  
                     -- Read checkbox states from text file and update checkboxes 
+                    -- ALWAYS add new checkboxes to the end so savedSettings doesnt break
                     et_path.text = readLine fStream
-                    chk_findTex.state = (readValue fStream) == 1
-                    chk_renameGltfMaps.state = (readValue fStream) == 1
-                    chk_rmLog.state = (readValue fStream) == 1
-                    chk_rmSubdiv.state = (readValue fStream) == 1
-                    chk_rmMultiSub.state = (readValue fStream) == 1
-                    chk_hWarnings.state = (readValue fStream) == 1
-                    chk_cSelMat.state = (readValue fStream) == 1
-                    chk_xpSel.state = (readValue fStream) == 1
-                    chk_xpSelCombine.state = (readValue fStream) == 1
-                    chk_xpAll.state = (readValue fStream) == 1
+                    chk_findTex.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_renameGltfMaps.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_rmLog.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_rmSubdiv.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_rmMultiSub.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_hWarnings.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_cSelMat.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_xpSel.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_xpSelCombine.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_xpAll.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_glassToTrans.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_invertGloss.state = if not eof fStream then (readValue fStream) == 1 else false
+                    chk_GlbCompliant.state = if not eof fStream then (readValue fStream) == 1 else false
                 )  
                 -- Close the text file            
                 close fStream  
@@ -726,7 +1362,7 @@ Icon:"MassFX\CreateHingeConstraint"
             )
             else
             (
-                -- load defaultExportDirectory
+                -- Load defaultExportDirectory
                 et_path.text = defaultExportDirectory
                 et_exportName.text = ""
                 et_exportName.visible = false
@@ -747,16 +1383,14 @@ Icon:"MassFX\CreateHingeConstraint"
         -- Convert Materials (button)
         on btn_convertMtl pressed do
         (
-            clearListener()
+            if testMode == true then clearListener()
 
-            -- Rename GLTF Map Nodes
             if chk_renameGltfMaps.checked then renameGltfMaps = true else renameGltfMaps = false
-
-            -- Hide Warning Popups
             if chk_hWarnings.checked then hideWarningPopups = true else hideWarningPopups = false
-
-            -- Find Missing Bitmaps
+            if chk_GlbCompliant.checked then convertGlbCompliant = true else convertGlbCompliant = false
             if chk_findTex.checked then findTextures = true else findTextures = false
+            if chk_glassToTrans.checked then glassToTransmission = true else glassToTransmission = false
+            if chk_invertGloss.checked then convertGlossinessMaps = true else glassToTransmission = false
 
             with undo on 
             (
@@ -779,7 +1413,6 @@ Icon:"MassFX\CreateHingeConstraint"
                             ConvertCoronaVray()
                         )
                     )
-
                 )
                 else 
                 (
@@ -789,7 +1422,6 @@ Icon:"MassFX\CreateHingeConstraint"
                     ConvertCoronaVray()
                 )   
             )
-            
             PrintMissingTextures()
         )
 
@@ -852,7 +1484,6 @@ Icon:"MassFX\CreateHingeConstraint"
         )
 
         -- Save Settings as Default (button)
-
         on btn_saveSettings pressed do  
         (  
             -- Save UI Settings to text file to remember user preference                 
@@ -874,6 +1505,9 @@ Icon:"MassFX\CreateHingeConstraint"
             format "%\n" (if chk_xpSel.state then 1 else 0) to:fStream  
             format "%\n" (if chk_xpSelCombine.state then 1 else 0) to:fStream  
             format "%\n" (if chk_xpAll.state then 1 else 0) to:fStream  
+            format "%\n" (if chk_glassToTrans.state then 1 else 0) to:fStream  
+            format "%\n" (if chk_invertGloss.state then 1 else 0) to:fStream   
+            format "%\n" (if chk_GlbCompliant.state then 1 else 0) to:fStream  
             
             -- Close the text file          
             close fStream  
@@ -882,7 +1516,6 @@ Icon:"MassFX\CreateHingeConstraint"
         )  
 
         -- Restore Original Settings (button)  
-
         on btn_restoreSettings pressed do  
         (  
             -- Delete the settings text file           
@@ -901,9 +1534,23 @@ Icon:"MassFX\CreateHingeConstraint"
             chk_xpSelCombine.checked = false
             chk_xpAll.checked = false
             et_exportName.visible = false
+            chk_glassToTrans.checked = true
+            chk_invertGloss.checked = true
+            chk_GlbCompliant.checked = true
         )  
     )
 
-    CreateDialog CoronaVrayToGLB POS:[100,200] width:300 height:605
-    cui.RegisterDialogBar CoronaVrayToGLB
+    if testMode == false then
+    (
+        CreateDialog CoronaVrayToGLB POS:[100,200] width:300 height:660
+        cui.RegisterDialogBar CoronaVrayToGLB
+    )
+    else
+    (
+        CreateDialog CoronaVrayToGLB POS:[100,200] width:300 height:660
+        cui.RegisterDialogBar CoronaVrayToGLB
+        CoronaVrayToGLB.btn_convertMtl.pressed()
+        try(cui.UnRegisterDialogBar CoronaVrayToGLB)catch()
+        try(DestroyDialog CoronaVrayToGLB)catch()
+    )
 )   
