@@ -67,8 +67,6 @@ Icon:"MassFX\CreateHingeConstraint"
         -- "File Missing" in Asset Tracker
         missingATSFiles = #()
         enumerateFiles (fn getNames name a = appendIfUnique a name) missingATSFiles #missing
-
-        -- Print Missing Assets
         for i in missingATSFiles do
         (
             appendIfUnique missingTex (getFilenameFile i + ": File Missing. Check the Asset Tracker and resolve Status to Found or OK")
@@ -122,7 +120,7 @@ Icon:"MassFX\CreateHingeConstraint"
             regexReplace = dotNetObject "System.Text.RegularExpressions.Regex" regexPattern (dotNetClass "System.Text.RegularExpressions.RegexOptions").IgnoreCase
             cleanedBitmapName = regexReplace.Replace bitmapName ""
 
-            -- Locate all textures in that directory and assign them to an array
+            -- Collect Locate all textures in directory
             allBitmapsInDirectory = #() 
             for f in getFiles (bitmapDir + "*.*") do 
             ( 
@@ -150,7 +148,6 @@ Icon:"MassFX\CreateHingeConstraint"
             -- Replace suffix
             for bitmapName in allBitmapsInDirectory do
             (
-                -- Loop through the words to find
                 for word in wordsToFind do
                 (  
                     regexPattern = cleanedBitmapName + "[-_](" + word + ".*)$"  -- Match hyphen or underscore eg Sofa_Diffuse or Sofa-Diffuse
@@ -451,8 +448,7 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Function to convert Corona or VrayMtl to glTF material 
     fn ConvertToGltf currentMaterial = 
     ( 
-        -- Re-path bitmaps to "Found" location, must be executed after converting Engine specific 
-        -- to standard bitmaps
+        -- Re-path bitmaps to "Found" location, must be after converting Engine specific to standard bitmaps
         RepathFoundAssets() 
 
         -- Basic settings for GLTF shader 
@@ -872,7 +868,7 @@ Icon:"MassFX\CreateHingeConstraint"
 
                 if renderEngine == "Corona" then
                 (
-                    -- Media options > Volumetric Scattering
+                    -- Media options -> Volumetric Scattering
                     if currentMaterial.attenuationDistance > 0 and currentMaterial.useThinMode == false then
                     (
                         newMaterial.enableVolume = on
@@ -890,7 +886,7 @@ Icon:"MassFX\CreateHingeConstraint"
                         ) 
                     )
 
-                    -- Thin Shell > Translucency
+                    -- Thin Shell -> Translucency
                     if currentMaterial.useThinMode == on and currentMaterial.translucencyFraction > 0 then
                     (
                         newMaterial.enableVolume = on
@@ -909,7 +905,7 @@ Icon:"MassFX\CreateHingeConstraint"
                         ) 
                     )
 
-                    -- Thin Shell > Refraction Thin Absorption
+                    -- Thin Shell -> Refraction Thin Absorption
                     if currentMaterial.useThinMode == on and (currentMaterial.refractionAmount == 1 or transmissionNode != undefined) then
                     (
                         newMaterial.enableVolume = on
@@ -969,7 +965,7 @@ Icon:"MassFX\CreateHingeConstraint"
             try(newMaterial.volumeThicknessMap.name = "VolumeThickness")catch()
         )
 
-        -- Convert bitmaps to glb compliant
+        -- Convert bitmaps to GLB compliant (example: tif -> jpg)
         if convertGlbCompliant == true then
         (
             for i in getClassInstances bitmaptexture target:newMaterial do  
@@ -1178,8 +1174,7 @@ Icon:"MassFX\CreateHingeConstraint"
                 foundMapCount += 1 
             ) 
         ) 
-        -- return count of found bitmaps 
-        foundMapCount 
+        return foundMapCount 
     )
 
     -- Replace multi-sub materials with a sub-material with highest texture count
@@ -1333,7 +1328,7 @@ Icon:"MassFX\CreateHingeConstraint"
                 while not eof fStream do  
                 (  
                     -- Read checkbox states from text file and update checkboxes 
-                    -- ALWAYS add new checkboxes to the end so savedSettings doesnt break
+                    -- ALWAYS add new checkboxes to the end so savedSettings doesnt break on new version additions
                     et_path.text = readLine fStream
                     chk_findTex.state = if not eof fStream then (readValue fStream) == 1 else false
                     chk_renameGltfMaps.state = if not eof fStream then (readValue fStream) == 1 else false
@@ -1348,8 +1343,7 @@ Icon:"MassFX\CreateHingeConstraint"
                     chk_glassToTrans.state = if not eof fStream then (readValue fStream) == 1 else false
                     chk_invertGloss.state = if not eof fStream then (readValue fStream) == 1 else false
                     chk_GlbCompliant.state = if not eof fStream then (readValue fStream) == 1 else false
-                )  
-                -- Close the text file            
+                )         
                 close fStream  
                 free fStream  
                 ForceCompleteRedraw()   
@@ -1394,13 +1388,9 @@ Icon:"MassFX\CreateHingeConstraint"
 
             with undo on 
             (
-                -- Remove Subdivisions
                 if chk_rmSubdiv.checked then RemoveSubdivions()
-
-                -- Collapse Multisubs
                 if chk_rmMultiSub.checked then CollapseMultiSubs()
 
-                -- Convert Materials to Corona/Vray
                 if chk_cSelMat.checked then 
                 (
                     convertSelectedMaterials = true 
@@ -1488,7 +1478,7 @@ Icon:"MassFX\CreateHingeConstraint"
         (  
             -- Save UI Settings to text file to remember user preference                 
             saveDirectory = getDir #userScripts + "\\Vella"  
-            if not doesFileExist saveDirectory do makeDir saveDirectory  
+            if not doesDirectoryExist saveDirectory do makeDir saveDirectory  
 
             -- Save settings to text file           
             fStream = createFile savedSettings  
