@@ -278,7 +278,7 @@ Icon:"MassFX\CreateHingeConstraint"
     -- Convert HEX to RGB
     fn HexToRGB hexColor =
     (
-        -- Remove the "#" if it exists
+        -- Remove the "#""
         hexColor = substituteString hexColor "#" ""
 
         -- Convert HEX components to decimal
