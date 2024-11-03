@@ -690,7 +690,8 @@ Icon:"MassFX\CreateHingeConstraint"
 
         if newMaterial.AlphaMap != undefined then
         (
-            newMaterial.alphaMode = 3	-- Blend mode 
+            newMaterial.alphaMode = 2	-- Mask mode 
+            newMaterial.alphaCutoff = 0.5
         )
 
         -- Sheen
