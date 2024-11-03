@@ -34,7 +34,7 @@ Icon:"MassFX\CreateHingeConstraint"
     renderEngine = ""
     testMode = false
     -- testMode = true -- Disable for live
-    findTextures = true
+    findTextures = false
     renameGltfMaps = true
     hideWarningPopups = false
     exportSelectedObjs = true
@@ -42,7 +42,7 @@ Icon:"MassFX\CreateHingeConstraint"
     convertGlbCompliant = true
     convertGlossinessMaps = true
     convertSelectedMaterials = true
-    glassToTransmission = true
+    glassToTransmission = false
     theTarget = rootnode -- switch to obj for selected objects
     missingTex = #()
 
@@ -374,10 +374,10 @@ Icon:"MassFX\CreateHingeConstraint"
                     save newBitmap
                     close newBitmap
                     close originalBitmap
-                    free newBitmap -- garbage collect
-                    free originalBitmap
             
                     currentBitmap.filename = newBitmap.filename
+                    free newBitmap -- garbage collect
+                    free originalBitmap
                 )
             )
         )
@@ -690,6 +690,7 @@ Icon:"MassFX\CreateHingeConstraint"
 
         if newMaterial.AlphaMap != undefined then
         (
+            -- newMaterial.alphaMode = 3	-- Blend mode 
             newMaterial.alphaMode = 2	-- Mask mode 
             newMaterial.alphaCutoff = 0.5
         )
@@ -966,6 +967,7 @@ Icon:"MassFX\CreateHingeConstraint"
             try(newMaterial.volumeThicknessMap.name = "VolumeThickness")catch()
         )
 
+        -- TODO: Fix tif filename issue
         -- Convert bitmaps to GLB compliant (example: tif -> jpg)
         if convertGlbCompliant == true then
         (
@@ -1511,7 +1513,7 @@ Icon:"MassFX\CreateHingeConstraint"
 
             -- Restore checkboxes 
             et_path.text = defaultExportDirectory
-            chk_findTex.checked = true 
+            chk_findTex.checked = false 
             chk_renameGltfMaps.checked = true 
             chk_rmLog.checked = true 
             chk_rmSubdiv.checked = true
@@ -1522,7 +1524,7 @@ Icon:"MassFX\CreateHingeConstraint"
             chk_xpSelCombine.checked = false
             chk_xpAll.checked = false
             et_exportName.visible = false
-            chk_glassToTrans.checked = true
+            chk_glassToTrans.checked = false
             chk_invertGloss.checked = true
             chk_GlbCompliant.checked = true
         )  
