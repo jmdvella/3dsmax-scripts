@@ -13,7 +13,7 @@ macroscript VrayToBlenderGLB
 	Author: James Vella
 	Website: http://www.jamesvella.net/
 	Name-US: JV_VrayToBlenderGLB
-	Version: 5.2
+	Version: 5.3
 	Software: 3D Studio Max 2021.3
 	Engine: V-Ray 5.20.23
 	Language: Maxscript
@@ -574,18 +574,18 @@ macroscript VrayToBlenderGLB
 		)  
 		 
 		-- Convert VrayBitmap to Standard Bitmap       
-		for i in getClassInstances VRayBitmap target:rootnode do  
-		(  
-			p = ConvertVrayBitmaps i  
-			try  
+		try
+		(
+			for i in getClassInstances VRayBitmap target:rootnode do  
 			(  
+				p = ConvertVrayBitmaps i  
 				replaceinstances i p  
 			)  
-			catch  
-			(  
-				messagebox("Unable to convert Vray Bitmaps to Standard Bitmaps.")  
-			)  
-		)  
+		)
+		catch  
+		(  
+			print("Unable to convert Vray Bitmaps to Standard Bitmaps.")  
+		)
 		 
 		-- Replace the Multi/Sub-Object material with the sub-material with the highest bitmap count       
 		for mat in getClassInstances MultiMaterial target:rootnode do  
