@@ -1,17 +1,17 @@
-
+/* 
 macroscript CoronaRandomizer
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Automate CoronaRandomizer"
 	buttonText:"Corona Randomizer"
 	Icon:#("UVWUnwrapTools",41)
-
+ */
 (  
 	/*
 	Author: James Vella
 	Website: http://www.jamesvella.net
 	Name-US: JV_CoronaRandomizer
-	Version: 4.4
+	Version: 4.5
 	Software: 3D Studio Max 2024.1
 	Engine: Corona 10.0
 	Language: Maxscript
@@ -65,8 +65,8 @@ macroscript CoronaRandomizer
 
 			for obj in selection do
 			(
-				for m in (getClassInstances CoronaPhysicalMtl target:obj.material) + 
-						 (getClassInstances CoronaLegacyMtl target:obj.material) do
+				for m in (getClassInstances CoronaPhysicalMtl target:obj) + 
+						 (getClassInstances CoronaLegacyMtl target:obj) do
 				(
 					appendIfUnique all_selected_materials m
 				) 
@@ -89,7 +89,6 @@ macroscript CoronaRandomizer
 				-- Input is Color Correct -> input and index for location of bitmap 
 				local cc_input = undefined
 				local output_index = material_input.outputChannelIndex
-				-- format "output_index = %\n" output_index 
 
 				if output_index == 1 then
 				(
@@ -110,7 +109,6 @@ macroscript CoronaRandomizer
 				for found_bitmap in (getClassInstances Bitmaptexture target:material_input) + 
 									(getClassInstances CoronaBitmap target:material_input) do 
 				(
-					-- format "found_bitmap = %\n" found_bitmap
 					return found_bitmap
 				) 
 			)
@@ -120,6 +118,7 @@ macroscript CoronaRandomizer
 		function collectCoronaDiffuse selected_material = 
 		(
 			-- Collect Diffuse Bitmap from Corona Mtl --
+
 			local diffuse_input = undefined
 			
 			if isKindOf selected_material CoronaPhysicalMtl then  
@@ -381,8 +380,9 @@ macroscript CoronaRandomizer
 								-- rewire diffuse to remove additonal source map
 								new_output_diffuse.outputChannelIndex = output_index -- set the index of the current input/output
 								new_output_diffuse.sourceMap = diffuse_ccorrect -- create first or get additional sourceMap node
-								try(selected_material.baseTexmap = new_output_diffuse)catch() 		-- CoronaPhysicalMtl, create last or get additional sourceMap node
-								try(selected_material.texmapDiffuse = new_output_diffuse)catch() 	-- CoronaLegacyMtl, create last or get additional sourceMap node
+								-- create last or get additional sourceMap node
+								try(selected_material.baseTexmap = new_output_diffuse)catch() 		-- CoronaPhysicalMtl
+								try(selected_material.texmapDiffuse = new_output_diffuse)catch() 	-- CoronaLegacyMtl
 							)
 						)
 					) 
@@ -397,8 +397,6 @@ macroscript CoronaRandomizer
 			-- # Case 1 = Diffuse & Translucency are the same bitmap
 			-- # Case 2 = Diffuse & Translucency are NOT the same bitmap
 
-			-- Variables
-			-- local ccorrect = CoronaColorCorrect()
 			ccorrect.name = "Translucency CC"  
 
 			-- Variables for Case of
@@ -427,8 +425,8 @@ macroscript CoronaRandomizer
 				-- Execute # Case 
 				case of 
 				(
-					(trans_is_diffuse == true): convertTranslucency selected_material 1 ccorrect 		-- # Case 1
-					(trans_is_bitmap == true):  convertTranslucency selected_material 2 ccorrect 		-- # Case 2
+					(trans_is_diffuse == true): convertTranslucency selected_material 1 ccorrect 	-- # Case 1
+					(trans_is_bitmap == true):  convertTranslucency selected_material 2 ccorrect 	-- # Case 2
 				)
 			)
 		)
@@ -439,7 +437,6 @@ macroscript CoronaRandomizer
 			-- It adds takes the Diffuse and adds it to ColorCorrect then Transluency 
 			-- Deletes existing Translucency nodes in the chain
 			
-			-- local ccorrect = CoronaColorCorrect()
 			ccorrect.name = "Translucency CC" 
 			 
 			for selected_material in selected_materials do  
@@ -453,7 +450,7 @@ macroscript CoronaRandomizer
 				)
 
 				local texture_map = collectCoronaDiffuse selected_material -- Collect Bitmap & CoronaBitmaps
-				convertTranslucency selected_material 1 ccorrect 
+				convertTranslucency selected_material 1 ccorrect -- # Case 1
 			)
 		)
 		
@@ -491,6 +488,7 @@ macroscript CoronaRandomizer
 								if ccorrect.inputTexmap == undefined then  
 								(  
 									ccorrect.inputTexmap = current_tex -- put first texture (diffuse) back into 'input' after being moved to 'input1'  
+
 									new_output.sourceMap.additionalOutputs = 0 -- reorder outputs to start back at index 1  
 								)  
 								else  
@@ -580,7 +578,7 @@ macroscript CoronaRandomizer
 
 			group "Information"  
 			(  
-				label lbl_ver "Version 4.4" align:#left across:2  
+				label lbl_ver "Version 4.5" align:#left across:2  
 				HyperLink hyp_tutorial "Contact" align:#right color:(color 0 255 255) hovercolor:(color 0 150 150) visitedcolor:(color 0 200 200) address:"mailto:jmdvella@gmail.com"  
 			)  
 			group "Instructions"  
@@ -947,4 +945,3 @@ macroscript CoronaRandomizer
 		-- createDialog randomizer_rl escapeEnable:true style:#(#style_titlebar, #style_sysmenu, #style_toolwindow, #style_resizing, #style_border)          
 	)
 )
-
