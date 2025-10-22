@@ -1,11 +1,9 @@
-/* 
 macroscript CoronaRandomizer
 	category:"Vella" 
 	internalcategory:"Automate"
 	tooltip:"Automate CoronaRandomizer"
 	buttonText:"Corona Randomizer"
 	Icon:#("UVWUnwrapTools",41)
- */
 (  
 	/*
 	Author: James Vella
@@ -945,3 +943,4 @@ macroscript CoronaRandomizer
 		-- createDialog randomizer_rl escapeEnable:true style:#(#style_titlebar, #style_sysmenu, #style_toolwindow, #style_resizing, #style_border)          
 	)
 )
+
