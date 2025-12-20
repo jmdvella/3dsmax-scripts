@@ -26,7 +26,7 @@ Icon:"CivilView\Normal"
         )
     )
 
-    -- Create CoronaNormal() and return if bitmap found
+    -- Create CoronaNormal() if bitmap found
     fn AddCoronaNormal foundBitmap =
     (
         local cNormal = CoronaNormal()
@@ -58,9 +58,12 @@ Icon:"CivilView\Normal"
                 (
                     local classArr = #(Bitmaptexture, CoronaBitmap) -- add extra classes you want to search for
                     local foundBitmap = FindBitmapInNodeTree classArr bNode
-                    local cNormal = AddCoronaNormal foundBitmap
 
-                    if foundBitmap != undefined and cNormal != undefined then setProperty m p cNormal  
+                    if foundBitmap != undefined then
+                    (
+                        local cNormal = AddCoronaNormal foundBitmap
+                        if cNormal != undefined then setProperty m p cNormal  
+                    )                    
                 )                
             )
         )
