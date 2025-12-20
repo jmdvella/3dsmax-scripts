@@ -22,6 +22,15 @@ My collection of 3dsmax scripts. Currently written for 3D Studio Max 2021.3 in M
 
 <br />
 
+### JV_CoronaNormal.ms
+- Selected objects only (change 'selection' to 'objects' if you want all scene objects) on line: for obj in selection do ConvertCoronaNormal obj.
+- Checks if bitmap or corona bitmap in the bump slot of CoronaPhysicalMtl or CoronaLegacyMtl.
+- If no CoronaNormal node exists then creates one and re-wires your bitmaps to the Normal input.
+- Takes the bitmap gamma into account and adjusts the CoronaNormal() 'add gamma to input ' on/off automatically.
+- Tree search for bitmaps if they are in a mix node or similar (within the bump slot), will use the first found bitmap.
+
+<br />
+
 ### JV_CoronaRandomizer.ms
 - You can watch the [youtube video](https://youtu.be/MEQ_Jbbobgs) for detailed instructions.
 - Add either CoronaMappingRandomizer, CoronaTriplanar or both at the same time
