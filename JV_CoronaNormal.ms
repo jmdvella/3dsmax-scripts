@@ -44,7 +44,7 @@ Icon:"CivilView\Normal"
     -- Place bitmap or corona bitmap from bump in CoronaNormal
     fn ConvertCoronaNormal obj =
     (
-        local bumpProps = #(#texmapBump, #baseBumpTexmap) -- add extra properties you want to check for
+        local bumpProps = #(#texmapBump, #baseBumpTexmap) -- add extra properties you want to search for
 
         for m in (getClassInstances CoronaPhysicalMtl target:obj) + (getClassInstances CoronaLegacyMtl target:obj) do
         (
@@ -56,7 +56,8 @@ Icon:"CivilView\Normal"
 
                 if bNode != undefined and classof bNode != CoronaNormal then 
                 (
-                    local foundBitmap = FindBitmapInNodeTree #(Bitmaptexture, CoronaBitmap) bNode
+                    local classArr = #(Bitmaptexture, CoronaBitmap) -- add extra classes you want to search for
+                    local foundBitmap = FindBitmapInNodeTree classArr bNode
                     local cNormal = AddCoronaNormal foundBitmap
 
                     if foundBitmap != undefined and cNormal != undefined then setProperty m p cNormal  
