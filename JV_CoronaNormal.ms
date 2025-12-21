@@ -8,7 +8,7 @@ Icon:"CivilView\Normal"
     Author: James Vella
     Website: http://www.jamesvella.net
     Name-US: JV_CoronaNormal
-    Version: 3.0
+    Version: 3.1
     Software: 3D Studio Max 2024.2.3
     Engine: Corona 12 Update 1 (Hotfix 1) 
     Language: Maxscript
@@ -18,12 +18,13 @@ Icon:"CivilView\Normal"
     -- Tree search for bitmap within class array, mNode = target node in material
     fn FindBitmapInNodeTree classArr mNode =
     (
-        -- add classes in classArr you want to search for
         for cls in classArr do
         (
-            local arr = getClassInstances cls target:mNode
-            if arr.count > 0 then return arr[1]
-        )
+            for b in getClassInstances cls target:mNode do
+            (
+                return b
+            )
+        )       
     )
 
     -- Create CoronaNormal() if bitmap found
@@ -33,7 +34,8 @@ Icon:"CivilView\Normal"
         cNormal.normalMap = foundBitmap
 
         -- Set gamma for CoronaNormal()
-        if (classof foundBitmap == Bitmaptexture and foundBitmap.bitmap.inputGammaValue != 1.0) or (classof foundBitmap == CoronaBitmap and foundBitmap.gamma != 1.0) then
+        if (classof foundBitmap == Bitmaptexture and foundBitmap.bitmap.inputGammaValue != 1.0) or 
+           (classof foundBitmap == CoronaBitmap and foundBitmap.gamma != 1.0) then
         (
             cNormal.addGamma = on
         )
@@ -52,9 +54,9 @@ Icon:"CivilView\Normal"
             for p in bumpProps where isProperty m p do
             (
                 -- Check if any nodes in bump node
-                local bNode = getProperty m p           
+                local bNode = getProperty m p
 
-                if bNode != undefined and classof bNode != CoronaNormal then 
+                if bNode != undefined and classof bNode != CoronaNormal then
                 (
                     local classArr = #(Bitmaptexture, CoronaBitmap) -- add extra classes you want to search for
                     local foundBitmap = FindBitmapInNodeTree classArr bNode
@@ -62,9 +64,9 @@ Icon:"CivilView\Normal"
                     if foundBitmap != undefined then
                     (
                         local cNormal = AddCoronaNormal foundBitmap
-                        if cNormal != undefined then setProperty m p cNormal  
-                    )                    
-                )                
+                        if cNormal != undefined then setProperty m p cNormal
+                    )
+                )
             )
         )
     )
