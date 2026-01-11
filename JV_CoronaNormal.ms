@@ -1,16 +1,16 @@
 macroscript CoronaNormal
 category:"Vella" 
 tooltip:"Automate CoronaNormal"
-buttonText:"Corona Bitmap to CoronaNormal"
+buttonText:"Bitmap to CoronaNormal"
 Icon:"CivilView\Normal"
 (
     /*
     Author: James Vella
     Website: http://www.jamesvella.net
     Name-US: JV_CoronaNormal
-    Version: 3.1
+    Version: 3.2
     Software: 3D Studio Max 2024.2.3
-    Engine: Corona 12 Update 1 (Hotfix 1) 
+    Engine: Corona 12 Update 1 (Hotfix 1)
     Language: Maxscript
     Description-US: Place bitmap or corona bitmap from bump in corona normal and set gamma, recursive tree search
     */
@@ -47,8 +47,10 @@ Icon:"CivilView\Normal"
     fn ConvertCoronaNormal obj =
     (
         local bumpProps = #(#texmapBump, #baseBumpTexmap) -- add extra properties you want to search for
+        local coronaMats = (getClassInstances CoronaPhysicalMtl target:obj) + 
+                           (getClassInstances CoronaLegacyMtl target:obj)
 
-        for m in (getClassInstances CoronaPhysicalMtl target:obj) + (getClassInstances CoronaLegacyMtl target:obj) do
+        for m in coronaMats do
         (
             -- m = material, p = property
             for p in bumpProps where isProperty m p do
@@ -64,7 +66,11 @@ Icon:"CivilView\Normal"
                     if foundBitmap != undefined then
                     (
                         local cNormal = AddCoronaNormal foundBitmap
-                        if cNormal != undefined then setProperty m p cNormal
+                        if cNormal != undefined then 
+                        (
+                            setProperty m p cNormal
+                            format "CoronaNormal added for Object: % ; with Material: %\n" obj.name m.name
+                        )
                     )
                 )
             )
